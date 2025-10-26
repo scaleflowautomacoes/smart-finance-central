@@ -61,7 +61,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Cores Semânticas para consistência
+				success: 'var(--success)',
+				error: 'var(--error)',
+				warning: 'var(--warning)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

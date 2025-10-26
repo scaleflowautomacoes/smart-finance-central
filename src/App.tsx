@@ -16,35 +16,38 @@ import VeiculosManutencoes from "./pages/VeiculosManutencoes";
 import Investimentos from "./pages/Investimentos";
 import FluxoDeCaixa from "./pages/FluxoDeCaixa";
 import Lucro from "./pages/Lucro";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            
-            {/* NOVOS MÓDULOS */}
-            <Route path="/dividas" element={<ProtectedRoute><Dividas /></ProtectedRoute>} />
-            <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
-            <Route path="/metas" element={<ProtectedRoute><Metas /></ProtectedRoute>} />
-            <Route path="/veiculos" element={<ProtectedRoute><VeiculosManutencoes /></ProtectedRoute>} />
-            <Route path="/investimentos" element={<ProtectedRoute><Investimentos /></ProtectedRoute>} />
-            <Route path="/fluxo-de-caixa" element={<ProtectedRoute><FluxoDeCaixa /></ProtectedRoute>} />
-            <Route path="/lucro" element={<ProtectedRoute><Lucro /></ProtectedRoute>} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              
+              {/* NOVOS MÓDULOS */}
+              <Route path="/dividas" element={<ProtectedRoute><Dividas /></ProtectedRoute>} />
+              <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
+              <Route path="/metas" element={<ProtectedRoute><Metas /></ProtectedRoute>} />
+              <Route path="/veiculos" element={<ProtectedRoute><VeiculosManutencoes /></ProtectedRoute>} />
+              <Route path="/investimentos" element={<ProtectedRoute><Investimentos /></ProtectedRoute>} />
+              <Route path="/fluxo-de-caixa" element={<ProtectedRoute><FluxoDeCaixa /></ProtectedRoute>} />
+              <Route path="/lucro" element={<ProtectedRoute><Lucro /></ProtectedRoute>} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

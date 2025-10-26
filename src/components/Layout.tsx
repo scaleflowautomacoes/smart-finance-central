@@ -3,6 +3,7 @@ import { Building2, User, Plus, Settings, LogOut, Scale, TrendingUp, Target, Car
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemeToggle } from './ThemeToggle';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -85,6 +86,7 @@ const Layout: React.FC<LayoutProps> = ({
 
         {/* Footer Links */}
         <div className="mt-auto space-y-1 border-t pt-4">
+          <ThemeToggle />
           <Link to="/settings">
             <Button variant="ghost" className="w-full justify-start">
               <Settings className="h-4 w-4 mr-3" />
@@ -93,7 +95,7 @@ const Layout: React.FC<LayoutProps> = ({
           </Link>
           <Button 
             variant="ghost"
-            className="w-full justify-start text-red-600 hover:bg-red-50"
+            className="w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-3" />

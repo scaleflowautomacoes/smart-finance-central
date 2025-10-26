@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Transaction, Category } from '@/types/financial';
 import { CHART_COLORS, getRandomCategoryColor, formatCurrency } from '@/utils/chartColors';
+import { useTheme } from 'next-themes';
 
 interface CategoryChartsProps {
   transactions: Transaction[];
@@ -21,6 +22,11 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
   workspace, 
   periodFilter 
 }) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  const textColor = isDarkMode ? CHART_COLORS.neutral[300] : CHART_COLORS.neutral[600];
+  const gridColor = isDarkMode ? CHART_COLORS.neutral[700] : CHART_COLORS.neutral[200];
+  
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       if (t.deletado || t.origem !== workspace) return false;
@@ -79,18 +85,18 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[200px]">
-          <p className="font-semibold text-gray-900 mb-2">{label}</p>
+        <div className="bg-card border border-border rounded-lg shadow-xl p-4 min-w-[200px]">
+          <p className="font-semibold text-foreground mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center justify-between mb-1">
               <div className="flex items-center">
                 <div 
                   className="w-3 h-3 rounded-full mr-2" 
-                  style={{ backgroundColor: entry.color }}
+                  style={{ backgroundColor: entry.color || entry.fill }}
                 />
-                <span className="text-sm text-gray-600">{entry.name}:</span>
+                <span className="text-sm text-muted-foreground">{entry.name}:</span>
               </div>
-              <span className="font-medium text-gray-900 ml-2">
+              <span className="font-medium text-foreground ml-2">
                 {formatCurrency(entry.value)}
               </span>
             </div>
@@ -109,18 +115,18 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
         : pieSaidaData.reduce((sum, item) => sum + item.value, 0);
       
       return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[180px]">
+        <div className="bg-card border border-border rounded-lg shadow-xl p-4 min-w-[180px]">
           <div className="flex items-center mb-2">
             <div 
               className="w-4 h-4 rounded-full mr-2" 
               style={{ backgroundColor: data.payload.color }}
             />
-            <span className="font-semibold text-gray-900">{data.name}</span>
+            <span className="font-semibold text-foreground">{data.name}</span>
           </div>
           <div className="text-lg font-bold" style={{ color: data.payload.color }}>
             {formatCurrency(data.value)}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {((data.value / total) * 100).toFixed(1)}%
           </div>
         </div>
@@ -132,9 +138,9 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
       {/* Gráfico de Pizza - Entradas por Categoria */}
-      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-green-50">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardTitle className="text-lg text-green-700 font-bold">
+      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card to-green-50/50 dark:to-green-900/50">
+        <CardHeader className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-gray-800 dark:to-gray-900">
+          <CardTitle className="text-lg text-green-700 dark:text-green-400 font-bold">
             Distribuição de Entradas por Categoria
           </CardTitle>
         </CardHeader>
@@ -174,9 +180,9 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
                         className="w-3 h-3 rounded-full shadow-sm" 
                         style={{ backgroundColor: entry.color }}
                       />
-                      <span className="font-medium text-gray-700">{entry.name}</span>
+                      <span className="font-medium text-foreground">{entry.name}</span>
                     </div>
-                    <span className="font-bold text-green-600">
+                    <span className="font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(entry.value)}
                     </span>
                   </div>
@@ -184,10 +190,10 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
               </div>
             </>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <TrendingUp className="w-8 h-8 text-gray-400" />
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                  <TrendingUp className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <p>Nenhuma entrada encontrada no período</p>
               </div>
@@ -197,9 +203,9 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
       </Card>
 
       {/* Gráfico de Pizza - Saídas por Categoria */}
-      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-red-50">
-        <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50">
-          <CardTitle className="text-lg text-red-700 font-bold">
+      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card to-red-50/50 dark:to-red-900/50">
+        <CardHeader className="bg-gradient-to-r from-red-50/50 to-rose-50/50 dark:from-gray-800 dark:to-gray-900">
+          <CardTitle className="text-lg text-red-700 dark:text-red-400 font-bold">
             Distribuição de Saídas por Categoria
           </CardTitle>
         </CardHeader>
@@ -239,9 +245,9 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
                         className="w-3 h-3 rounded-full shadow-sm" 
                         style={{ backgroundColor: entry.color }}
                       />
-                      <span className="font-medium text-gray-700">{entry.name}</span>
+                      <span className="font-medium text-foreground">{entry.name}</span>
                     </div>
-                    <span className="font-bold text-red-600">
+                    <span className="font-bold text-red-600 dark:text-red-400">
                       {formatCurrency(entry.value)}
                     </span>
                   </div>
@@ -249,10 +255,10 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
               </div>
             </>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <TrendingDown className="w-8 h-8 text-gray-400" />
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                  <TrendingDown className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <p>Nenhuma saída encontrada no período</p>
               </div>
@@ -262,9 +268,9 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
       </Card>
 
       {/* Gráfico de Barras - Comparativo por Categoria */}
-      <Card className="lg:col-span-2 overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
-          <CardTitle className="text-lg text-gray-900 font-bold">
+      <Card className="lg:col-span-2 overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card to-indigo-50/50 dark:to-indigo-900/50">
+        <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 dark:from-gray-800 dark:to-gray-900">
+          <CardTitle className="text-lg text-foreground font-bold">
             Comparativo: Entradas vs Saídas por Categoria
           </CardTitle>
         </CardHeader>
@@ -283,19 +289,19 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
                       <stop offset="100%" stopColor={CHART_COLORS.expense.light} stopOpacity={0.4}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.neutral[200]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                   <XAxis 
                     dataKey="name" 
                     angle={-45}
                     textAnchor="end"
                     height={100}
-                    tick={{ fill: CHART_COLORS.neutral[600], fontSize: 11 }}
-                    axisLine={{ stroke: CHART_COLORS.neutral[300] }}
+                    tick={{ fill: textColor, fontSize: 11 }}
+                    axisLine={{ stroke: gridColor }}
                   />
                   <YAxis 
                     tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
-                    tick={{ fill: CHART_COLORS.neutral[600], fontSize: 12 }}
-                    axisLine={{ stroke: CHART_COLORS.neutral[300] }}
+                    tick={{ fill: textColor, fontSize: 12 }}
+                    axisLine={{ stroke: gridColor }}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
@@ -315,10 +321,10 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-80 flex items-center justify-center text-gray-500">
+            <div className="h-80 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BarChart3 className="w-10 h-10 text-gray-400" />
+                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BarChart3 className="w-10 h-10 text-muted-foreground" />
                 </div>
                 <p className="text-lg">Nenhuma transação encontrada no período</p>
               </div>
