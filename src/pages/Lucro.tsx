@@ -4,12 +4,13 @@ import { Briefcase, Filter } from 'lucide-react';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import PeriodFilter, { PeriodType } from '@/components/PeriodFilter';
-import { startOfMonth, endOfMonth } from 'date-fns';
+import { startOfYear, endOfMonth, startOfMonth } from 'date-fns';
 import { useProfitLoss } from '@/hooks/useProfitLoss';
 import DRETable from '@/components/lucro/DRETable';
 import ProfitIndicators from '@/components/lucro/ProfitIndicators';
 
 const Lucro = () => {
+  const now = new Date();
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
   
   const [periodFilter, setPeriodFilter] = useState<{
@@ -17,9 +18,9 @@ const Lucro = () => {
     startDate: Date;
     endDate: Date;
   }>({
-    type: 'current',
-    startDate: startOfMonth(new Date()),
-    endDate: endOfMonth(new Date())
+    type: 'custom', // Usamos custom para representar o período Jan-Atual
+    startDate: startOfYear(now),
+    endDate: endOfMonth(now)
   });
 
   const { transactions, categories, loading } = useSupabaseFinancialData();
