@@ -1,4 +1,3 @@
-
 export interface Transaction {
   id: string;
   nome: string;
@@ -50,4 +49,79 @@ export interface DashboardMetrics {
   saidasPagas: number;
   saldoProjetado: number;
   saldoReal: number;
+}
+
+// NOVAS ENTIDADES PARA OS MÓDULOS
+
+export interface Debt {
+  id: string;
+  user_id: string;
+  workspace: 'PF' | 'PJ';
+  name: string;
+  creditor: string;
+  total_amount: number;
+  remaining_amount: number;
+  interest_rate: number;
+  installments_total: number;
+  installments_paid: number;
+  due_date: string; // date
+  payment_day: number;
+  status: 'active' | 'paid' | 'late';
+  created_at: string;
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  workspace: 'PF' | 'PJ';
+  name: string;
+  description: string;
+  target_amount: number;
+  current_amount: number;
+  deadline: string; // date
+  category_id?: string;
+  status: 'active' | 'completed' | 'cancelled';
+  type: 'saving' | 'revenue' | 'expense_reduction';
+  created_at: string;
+}
+
+export interface Vehicle {
+  id: string;
+  user_id: string;
+  workspace: 'PF' | 'PJ';
+  name: string;
+  brand: string;
+  model: string;
+  year: number;
+  plate: string;
+  current_km: number;
+  created_at: string;
+}
+
+export interface Maintenance {
+  id: string;
+  vehicle_id: string;
+  user_id: string;
+  type: 'oil_change' | 'tire' | 'brake' | 'general' | 'other';
+  description: string;
+  cost: number;
+  km_performed: number;
+  next_km?: number;
+  date_performed: string; // date
+  next_date?: string; // date
+  created_at: string;
+}
+
+export interface Investment {
+  id: string;
+  user_id: string;
+  workspace: 'PF' | 'PJ';
+  name: string;
+  type: 'stock' | 'fund' | 'crypto' | 'real_estate' | 'fixed_income' | 'other';
+  initial_amount: number;
+  current_amount: number;
+  purchase_date: string; // date
+  expected_return: number; // % anual
+  status: 'active' | 'sold';
+  created_at: string;
 }

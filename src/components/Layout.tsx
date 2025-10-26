@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Building2, User, Plus, Settings, LogOut } from 'lucide-react';
+import { Building2, User, Plus, Settings, LogOut, Scale, TrendingUp, Target, Car, DollarSign, Briefcase, LayoutDashboard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +10,17 @@ interface LayoutProps {
   onWorkspaceChange: (workspace: 'PF' | 'PJ') => void;
   onNewTransaction: () => void;
 }
+
+const navItems = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dividas', icon: Scale, label: 'Dívidas' },
+  { to: '/relatorios', icon: TrendingUp, label: 'Relatórios' },
+  { to: '/metas', icon: Target, label: 'Metas' },
+  { to: '/veiculos', icon: Car, label: 'Veículos' },
+  { to: '/investimentos', icon: DollarSign, label: 'Investimentos' },
+  { to: '/fluxo-de-caixa', icon: Briefcase, label: 'Fluxo de Caixa' },
+  { to: '/lucro', icon: TrendingUp, label: 'Lucro (DRE)' },
+];
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
@@ -27,77 +37,97 @@ const Layout: React.FC<LayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border px-6 py-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <h1 className="text-2xl font-bold text-foreground">Central Financeira</h1>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar (Desktop) */}
+      <nav className="hidden lg:flex flex-col w-64 border-r bg-card p-4 space-y-4 sticky top-0 h-screen">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Central Financeira</h1>
+        
+        {/* Workspace Switcher */}
+        <div className="flex flex-col space-y-1 bg-muted rounded-lg p-1 border">
+          <Button
+            variant={currentWorkspace === 'PF' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onWorkspaceChange('PF')}
+            className="flex items-center justify-start space-x-2"
+          >
+            <User className="h-4 w-4" />
+            <span className="font-medium">Pessoa Física</span>
+          </Button>
+          <Button
+            variant={currentWorkspace === 'PJ' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onWorkspaceChange('PJ')}
+            className="flex items-center justify-start space-x-2"
+          >
+            <Building2 className="h-4 w-4" />
+            <span className="font-medium">Pessoa Jurídica</span>
+          </Button>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="flex flex-col space-y-1 pt-4">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.to;
+            return (
+              <Link key={item.to} to={item.to}>
+                <Button
+                  variant={isActive ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                >
+                  <Icon className="h-4 w-4 mr-3" />
+                  {item.label}
+                </Button>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Footer Links */}
+        <div className="mt-auto space-y-1 border-t pt-4">
+          <Link to="/settings">
+            <Button variant="ghost" className="w-full justify-start">
+              <Settings className="h-4 w-4 mr-3" />
+              Configurações
+            </Button>
+          </Link>
+          <Button 
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-3" />
+            Sair
+          </Button>
+        </div>
+      </nav>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Header (Mobile/Top Bar) */}
+        <header className="lg:hidden bg-card border-b border-border px-4 py-3 shadow-sm sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-foreground">
+              {currentWorkspace === 'PF' ? 'PF' : 'PJ'} Dashboard
+            </h1>
             
-            {/* Workspace Switcher - Mais Destacado */}
-            <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 border">
-              <Button
-                variant={currentWorkspace === 'PF' ? 'default' : 'ghost'}
+            <div className="flex items-center space-x-3">
+              <Button 
+                onClick={onNewTransaction} 
                 size="sm"
-                onClick={() => onWorkspaceChange('PF')}
-                className="flex items-center space-x-2"
               >
-                <User className="h-4 w-4" />
-                <span className="font-medium">Pessoa Física</span>
+                <Plus className="h-4 w-4" />
               </Button>
-              <Button
-                variant={currentWorkspace === 'PJ' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onWorkspaceChange('PJ')}
-                className="flex items-center space-x-2"
-              >
-                <Building2 className="h-4 w-4" />
-                <span className="font-medium">Pessoa Jurídica</span>
-              </Button>
+              {/* TODO: Add Mobile Menu/Drawer for navigation */}
             </div>
           </div>
+        </header>
 
-          <div className="flex items-center space-x-3">
-            <Link to="/settings">
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
-              </Button>
-            </Link>
-            <Button 
-              onClick={onNewTransaction} 
-              className="flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Nova Transação</span>
-            </Button>
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center space-x-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sair</span>
-            </Button>
-          </div>
-        </div>
-        
-        {/* Indicador de Contexto */}
-        <div className="mt-3 flex items-center space-x-2">
-          <div className={`h-2 w-2 rounded-full ${
-            currentWorkspace === 'PF' ? 'bg-primary' : 'bg-secondary'
-          }`} />
-          <span className="text-sm text-muted-foreground">
-            Visualizando dados de {currentWorkspace === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-          </span>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="px-6 py-6">
-        {children}
-      </main>
+        {/* Main Content */}
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

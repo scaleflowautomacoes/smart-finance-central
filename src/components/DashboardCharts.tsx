@@ -1,16 +1,20 @@
-
 import React from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { DashboardMetrics } from '@/types/financial';
+import { DashboardMetrics, Transaction } from '@/types/financial';
 import { CHART_COLORS, formatCurrency } from '@/utils/chartColors';
+import { useFinancialCalculations } from '@/hooks/useFinancialCalculations';
 
 interface DashboardChartsProps {
-  metrics: DashboardMetrics;
   workspace: 'PF' | 'PJ';
+  transactions: Transaction[]; // Adicionando transactions para cálculo interno
+  startDate?: Date;
+  endDate?: Date;
 }
 
-const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace }) => {
+const DashboardCharts: React.FC<DashboardChartsProps> = ({ workspace, transactions, startDate, endDate }) => {
+  const metrics = useFinancialCalculations(transactions, workspace, startDate, endDate);
+
   // Dados para o gráfico de pizza (Distribuição de Entradas vs Saídas)
   const pieData = [
     {
@@ -21,11 +25,11 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace })
     },
     {
       name: 'Saídas Pagas',
-      value: metrics.saidasPagas,
+      value: metrics.saidasRealizadas, // Usar saidasRealizadas (saidasPagas)
       color: CHART_COLORS.expense.main,
       gradient: CHART_COLORS.expense.gradient,
     }
-  ];
+  ].filter(d => d.value > 0);
 
   // Dados para o gráfico de barras (Previsto vs Realizado)
   const barData = [
@@ -37,7 +41,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace })
     {
       name: 'Saídas',
       Previsto: metrics.saidasPrevistas,
-      Realizado: metrics.saidasPagas
+      Realizado: metrics.saidasRealizadas // Usar saidasRealizadas (saidasPagas)
     }
   ];
 
@@ -51,7 +55,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace })
               <div className="flex items-center">
                 <div 
                   className="w-3 h-3 rounded-full mr-2" 
-                  style={{ backgroundColor: entry.color }}
+                  style={{ backgroundColor: entry.color || entry.fill }}
                 />
                 <span className="text-sm text-gray-600">{entry.name}:</span>
               </div>
@@ -69,6 +73,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace })
   const CustomPieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0];
+      const total = pieData.reduce((sum, item) => sum + item.value, 0);
+      
       return (
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-[180px]">
           <div className="flex items-center mb-2">
@@ -82,7 +88,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace })
             {formatCurrency(data.value)}
           </div>
           <div className="text-sm text-gray-500">
-            {((data.value / pieData.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)}%
+            {((data.value / total) * 100).toFixed(1)}%
           </div>
         </div>
       );
@@ -103,50 +109,58 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ metrics, workspace })
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
-                  paddingAngle={3}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color}
-                      className="hover:opacity-80 transition-opacity duration-200"
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomPieTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex justify-center space-x-8 mt-6">
-            {pieData.map((entry, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <div 
-                  className="w-4 h-4 rounded-full shadow-sm" 
-                  style={{ backgroundColor: entry.color }}
-                />
-                <div className="text-sm">
-                  <div className="font-semibold text-gray-900">{entry.name}</div>
-                  <div 
-                    className="font-bold text-lg"
-                    style={{ color: entry.color }}
-                  >
-                    {formatCurrency(entry.value)}
-                  </div>
-                </div>
+          {pieData.length > 0 ? (
+            <>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={3}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color}
+                          className="hover:opacity-80 transition-opacity duration-200"
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
+              <div className="flex justify-center space-x-8 mt-6">
+                {pieData.map((entry, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div 
+                      className="w-4 h-4 rounded-full shadow-sm" 
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <div className="text-sm">
+                      <div className="font-semibold text-gray-900">{entry.name}</div>
+                      <div 
+                        className="font-bold text-lg"
+                        style={{ color: entry.color }}
+                      >
+                        {formatCurrency(entry.value)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-500">
+              Nenhuma transação realizada no período.
+            </div>
+          )}
         </CardContent>
       </Card>
 

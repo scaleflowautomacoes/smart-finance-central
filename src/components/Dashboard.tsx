@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Transaction, Category } from '@/types/financial';
 import PeriodFilter, { PeriodType } from './PeriodFilter';
@@ -97,15 +96,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Gráficos - Stack em Mobile */}
       <div className="space-y-4 lg:space-y-6">
         <DashboardCharts 
-          metrics={{
-            entradasPrevistas: 0,
-            entradasRealizadas: 0,
-            saidasPrevistas: 0,
-            saidasPagas: 0,
-            saldoProjetado: 0,
-            saldoReal: 0
-          }} 
+          transactions={transactions}
           workspace={workspace} 
+          startDate={periodFilter.startDate}
+          endDate={periodFilter.endDate}
         />
         
         <CategoryCharts 
