@@ -1,36 +1,214 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Car } from 'lucide-react';
+import { Car, Plus, Wrench } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useVehicles } from '@/hooks/useVehicles';
+import { Vehicle, Maintenance } from '@/types/financial';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import VehicleForm from '@/components/veiculos/VehicleForm';
+import MaintenanceForm from '@/components/veiculos/MaintenanceForm';
+import VehicleCard from '@/components/veiculos/VehicleCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const VeiculosManutencoes = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
+  const [activeTab, setActiveTab] = useState('vehicles');
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | undefined>();
+  const [editingMaintenance, setEditingMaintenance] = useState<Maintenance | undefined>();
+  const [initialVehicleId, setInitialVehicleId] = useState<string | undefined>();
   
+  const { 
+    vehicles, 
+    maintenances, 
+    loading, 
+    actionLoading, 
+    addVehicle, 
+    updateVehicle, 
+    deleteVehicle,
+    addMaintenance,
+    deleteMaintenance
+  } = useVehicles();
+
+  const workspaceVehicles = useMemo(() => {
+    return vehicles.filter(v => v.workspace === currentWorkspace);
+  }, [vehicles, currentWorkspace]);
+  
+  const workspaceMaintenances = useMemo(() => {
+    const vehicleIds = workspaceVehicles.map(v => v.id);
+    return maintenances.filter(m => vehicleIds.includes(m.vehicle_id));
+  }, [maintenances, workspaceVehicles]);
+
+  const handleVehicleSubmit = async (vehicleData: Omit<Vehicle, 'id' | 'user_id' | 'created_at'>) => {
+    if (editingVehicle) {
+      await updateVehicle(editingVehicle.id, vehicleData);
+    } else {
+      await addVehicle(vehicleData);
+    }
+    setShowVehicleForm(false);
+    setEditingVehicle(undefined);
+  };
+  
+  const handleMaintenanceSubmit = async (maintenanceData: Omit<Maintenance, 'id' | 'user_id' | 'created_at'>) => {
+    if (editingMaintenance) {
+      // Implementar updateMaintenance se necessário, mas por enquanto focamos no add
+      // await updateMaintenance(editingMaintenance.id, maintenanceData);
+    } else {
+      await addMaintenance(maintenanceData);
+    }
+    setShowMaintenanceForm(false);
+    setEditingMaintenance(undefined);
+  };
+
+  const handleAddMaintenance = (vehicleId?: string) => {
+    setEditingMaintenance(undefined);
+    setInitialVehicleId(vehicleId);
+    setShowMaintenanceForm(true);
+  };
+
+  if (loading) {
+    return (
+      <Layout
+        currentWorkspace={currentWorkspace}
+        onWorkspaceChange={setCurrentWorkspace}
+        onNewTransaction={() => {}}
+      >
+        <LoadingSpinner text="Carregando dados de veículos..." />
+      </Layout>
+    );
+  }
+
+  if (showVehicleForm) {
+    return (
+      <Layout
+        currentWorkspace={currentWorkspace}
+        onWorkspaceChange={setCurrentWorkspace}
+        onNewTransaction={() => setShowVehicleForm(true)}
+      >
+        <div className="p-4">
+          <VehicleForm
+            vehicle={editingVehicle}
+            workspace={currentWorkspace}
+            onSubmit={handleVehicleSubmit}
+            onCancel={() => setShowVehicleForm(false)}
+            loading={actionLoading}
+          />
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (showMaintenanceForm) {
+    return (
+      <Layout
+        currentWorkspace={currentWorkspace}
+        onWorkspaceChange={setCurrentWorkspace}
+        onNewTransaction={() => setShowMaintenanceForm(true)}
+      >
+        <div className="p-4">
+          <MaintenanceForm
+            maintenance={editingMaintenance}
+            vehicles={workspaceVehicles}
+            onSubmit={handleMaintenanceSubmit}
+            onCancel={() => setShowMaintenanceForm(false)}
+            loading={actionLoading}
+            initialVehicleId={initialVehicleId}
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout
       currentWorkspace={currentWorkspace}
       onWorkspaceChange={setCurrentWorkspace}
-      onNewTransaction={() => console.log('Nova Transação')}
+      onNewTransaction={() => setShowVehicleForm(true)}
     >
       <div className="p-4 space-y-6">
-        <h1 className="text-3xl font-bold flex items-center space-x-3">
-          <Car className="h-7 w-7 text-primary" />
-          <span>Veículos e Manutenções ({currentWorkspace})</span>
-        </h1>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Módulo Veículos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Implementação de cadastro de veículos, histórico de manutenções e alertas inteligentes.
-            </p>
-            <p className="mt-2 text-sm text-yellow-600">
-              Status: Em desenvolvimento (Fase 3)
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold flex items-center space-x-3">
+            <Car className="h-7 w-7 text-primary" />
+            <span>Veículos e Manutenções ({currentWorkspace})</span>
+          </h1>
+          <Button onClick={() => setShowVehicleForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Veículo
+          </Button>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="vehicles">Veículos ({workspaceVehicles.length})</TabsTrigger>
+            <TabsTrigger value="maintenances">Manutenções ({workspaceMaintenances.length})</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="vehicles" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {workspaceVehicles.length === 0 ? (
+                <Card className="lg:col-span-3">
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    Nenhum veículo cadastrado para {currentWorkspace}.
+                  </CardContent>
+                </Card>
+              ) : (
+                workspaceVehicles.map(vehicle => (
+                  <VehicleCard
+                    key={vehicle.id}
+                    vehicle={vehicle}
+                    maintenances={maintenances}
+                    onEdit={(v) => { setEditingVehicle(v); setShowVehicleForm(true); }}
+                    onDelete={deleteVehicle}
+                    onAddMaintenance={handleAddMaintenance}
+                    loading={actionLoading}
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="maintenances" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <CardTitle className="text-lg">Histórico de Manutenções</CardTitle>
+                <Button size="sm" onClick={() => handleAddMaintenance()}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Nova Manutenção
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {workspaceMaintenances.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    Nenhuma manutenção registrada para os veículos de {currentWorkspace}.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {workspaceMaintenances.map(m => (
+                      <div key={m.id} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{m.description}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {m.type} - {m.km_performed.toLocaleString('pt-BR')} km
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className="font-bold text-red-600">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.cost)}
+                          </span>
+                          <Button variant="ghost" size="sm" onClick={() => deleteMaintenance(m.id)} disabled={actionLoading}>
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

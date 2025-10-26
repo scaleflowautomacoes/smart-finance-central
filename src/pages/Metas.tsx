@@ -1,36 +1,185 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target } from 'lucide-react';
+import { Target, Plus, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useGoals } from '@/hooks/useGoals';
+import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
+import { Goal } from '@/types/financial';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import GoalForm from '@/components/metas/GoalForm';
+import GoalCard from '@/components/metas/GoalCard';
+import { differenceInDays } from 'date-fns';
+
+const formatCurrency = (value: number) => 
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 const Metas = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
+  const [showForm, setShowForm] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | undefined>();
   
+  const { goals, loading, actionLoading, addGoal, updateGoal, deleteGoal, addContribution } = useGoals();
+  const { categories } = useSupabaseFinancialData();
+
+  const workspaceGoals = useMemo(() => {
+    return goals.filter(g => g.workspace === currentWorkspace);
+  }, [goals, currentWorkspace]);
+
+  const summary = useMemo(() => {
+    const totalTarget = workspaceGoals.reduce((sum, g) => sum + g.target_amount, 0);
+    const totalCurrent = workspaceGoals.reduce((sum, g) => sum + g.current_amount, 0);
+    const activeGoals = workspaceGoals.filter(g => g.status === 'active');
+    const completedGoals = workspaceGoals.filter(g => g.status === 'completed');
+    
+    const nextDeadline = activeGoals
+      .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())[0];
+
+    return {
+      totalTarget,
+      totalCurrent,
+      activeCount: activeGoals.length,
+      completedCount: completedGoals.length,
+      nextDeadline: nextDeadline ? differenceInDays(new Date(nextDeadline.deadline), new Date()) : 'N/A',
+    };
+  }, [workspaceGoals]);
+
+  const handleEdit = (goal: Goal) => {
+    setEditingGoal(goal);
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (goalData: Omit<Goal, 'id' | 'user_id' | 'created_at' | 'current_amount' | 'status'>) => {
+    if (editingGoal) {
+      await updateGoal(editingGoal.id, goalData);
+    } else {
+      await addGoal(goalData);
+    }
+    setShowForm(false);
+    setEditingGoal(undefined);
+  };
+
+  if (showForm) {
+    return (
+      <Layout
+        currentWorkspace={currentWorkspace}
+        onWorkspaceChange={setCurrentWorkspace}
+        onNewTransaction={() => setShowForm(true)}
+      >
+        <div className="p-4">
+          <GoalForm
+            goal={editingGoal}
+            workspace={currentWorkspace}
+            categories={categories}
+            onSubmit={handleSubmit}
+            onCancel={() => setShowForm(false)}
+            loading={actionLoading}
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout
       currentWorkspace={currentWorkspace}
       onWorkspaceChange={setCurrentWorkspace}
-      onNewTransaction={() => console.log('Nova Transação')}
+      onNewTransaction={() => setShowForm(true)}
     >
       <div className="p-4 space-y-6">
-        <h1 className="text-3xl font-bold flex items-center space-x-3">
-          <Target className="h-7 w-7 text-primary" />
-          <span>Metas Financeiras ({currentWorkspace})</span>
-        </h1>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Módulo Metas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Implementação de metas de poupança, receita e redução de despesas com acompanhamento de progresso.
-            </p>
-            <p className="mt-2 text-sm text-yellow-600">
-              Status: Em desenvolvimento (Fase 2)
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold flex items-center space-x-3">
+            <Target className="h-7 w-7 text-primary" />
+            <span>Metas Financeiras ({currentWorkspace})</span>
+          </h1>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Meta
+          </Button>
+        </div>
+
+        {loading ? (
+          <LoadingSpinner text="Carregando metas..." />
+        ) : (
+          <>
+            {/* Resumo das Metas */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="bg-blue-50 border-blue-200 md:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-1">
+                    <DollarSign className="h-4 w-4" />
+                    Progresso Total
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-800">
+                    {formatCurrency(summary.totalCurrent)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    De um objetivo total de {formatCurrency(summary.totalTarget)}
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-yellow-50 border-yellow-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-yellow-700 flex items-center space-x-1">
+                    <Clock className="h-4 w-4" />
+                    Metas Ativas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-800">
+                    {summary.activeCount}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Próximo prazo em {summary.nextDeadline} dias
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-green-700 flex items-center space-x-1">
+                    <CheckCircle className="h-4 w-4" />
+                    Metas Concluídas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-800">
+                    {summary.completedCount}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Parabéns pelo progresso!
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Lista de Metas */}
+            <h2 className="text-xl font-semibold mt-6 mb-4">Metas Ativas e Pendentes</h2>
+            {workspaceGoals.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Nenhuma meta cadastrada para {currentWorkspace}.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {workspaceGoals.map(goal => (
+                  <GoalCard 
+                    key={goal.id} 
+                    goal={goal} 
+                    onEdit={handleEdit} 
+                    onDelete={deleteGoal}
+                    onAddContribution={addContribution}
+                    loading={actionLoading}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </Layout>
   );
