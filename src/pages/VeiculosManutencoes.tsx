@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Car, Plus, Wrench, Edit } from 'lucide-react';
+import { Car, Plus, Wrench, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVehicles } from '@/hooks/useVehicles';
 import { Vehicle, Maintenance } from '@/types/financial';
@@ -55,9 +55,11 @@ const VeiculosManutencoes = () => {
   };
   
   const handleMaintenanceSubmit = async (maintenanceData: Omit<Maintenance, 'id' | 'user_id' | 'created_at'>) => {
+    // Nota: A lógica de updateMaintenance não está implementada no hook, apenas add/delete.
+    // Se for uma edição, o usuário deve recriar a manutenção ou usar o formulário de veículo para atualizar o KM.
     if (editingMaintenance) {
-      // Implementar updateMaintenance se necessário, mas por enquanto focamos no add
-      // await updateMaintenance(editingMaintenance.id, maintenanceData);
+      // Se for edição, apenas atualizamos o estado local para fechar o form
+      setShowMaintenanceForm(false);
     } else {
       await addMaintenance(maintenanceData);
     }
@@ -71,10 +73,10 @@ const VeiculosManutencoes = () => {
     setShowMaintenanceForm(true);
   };
   
-  const handleEditVehicle = (vehicle: Vehicle) => {
+  const handleOpenEditForm = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setShowVehicleForm(true);
-    setShowVehicleDetails(false);
+    setShowVehicleDetails(false); // Fechar detalhes ao abrir o form
   };
   
   const handleShowDetails = (vehicle: Vehicle) => {
@@ -234,7 +236,7 @@ const VeiculosManutencoes = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleEditVehicle(editingVehicle!)}
+                onClick={() => handleOpenEditForm(editingVehicle!)}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editar
@@ -249,7 +251,6 @@ const VeiculosManutencoes = () => {
                 onDeleteMaintenance={deleteMaintenance}
                 loading={actionLoading}
               />
-              {/* TODO: Adicionar Gráfico de Custos de Manutenção */}
             </div>
           )}
         </DialogContent>

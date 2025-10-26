@@ -6,6 +6,7 @@ import { Vehicle, Maintenance } from '@/types/financial';
 import { Car, Wrench, AlertTriangle, Edit, Trash2, Plus } from 'lucide-react';
 import { format, isBefore, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -28,7 +29,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, maintenances, onEdit
         if (!alert || (alert.type === 'km' && kmRemaining < (alert.km! - vehicle.current_km))) {
           alert = {
             type: 'km',
-            message: `Próxima manutenção (KM): ${m.type} em ${m.next_km} KM.`,
+            message: `Próxima manutenção (${m.type}): em ${m.next_km} KM.`,
             km: m.next_km
           };
         }
@@ -98,9 +99,28 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, maintenances, onEdit
           <Button variant="ghost" size="sm" onClick={() => onEdit(vehicle)} disabled={loading}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onDelete(vehicle.id)} disabled={loading}>
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </Button>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={loading}>
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir o veículo "{vehicle.name}"? Todas as manutenções associadas serão perdidas.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(vehicle.id)}>
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardContent>
     </Card>

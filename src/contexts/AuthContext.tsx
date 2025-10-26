@@ -19,6 +19,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (username: string, password: string): boolean => {
+    // Nota: A senha 'proposito20' é armazenada apenas em memória/código para este mock de autenticação.
+    // Em um ambiente real, a senha nunca deve ser armazenada no cliente.
     if (username === 'Admin' && password === 'proposito20') {
       setIsAuthenticated(true);
       localStorage.setItem('auth_status', 'authenticated');
