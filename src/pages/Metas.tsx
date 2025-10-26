@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, Plus, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Target, Plus, DollarSign, Clock, CheckCircle, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGoals } from '@/hooks/useGoals';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
@@ -9,7 +9,9 @@ import { Goal } from '@/types/financial';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import GoalForm from '@/components/metas/GoalForm';
 import GoalCard from '@/components/metas/GoalCard';
+import ContributionHistory from '@/components/metas/ContributionHistory';
 import { differenceInDays } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const formatCurrency = (value: number) => 
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -18,6 +20,7 @@ const Metas = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
   const [showForm, setShowForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | undefined>();
+  const [showDetails, setShowDetails] = useState(false);
   
   const { goals, loading, actionLoading, addGoal, updateGoal, deleteGoal, addContribution } = useGoals();
   const { categories } = useSupabaseFinancialData();
@@ -47,6 +50,12 @@ const Metas = () => {
   const handleEdit = (goal: Goal) => {
     setEditingGoal(goal);
     setShowForm(true);
+    setShowDetails(false);
+  };
+  
+  const handleDetails = (goal: Goal) => {
+    setEditingGoal(goal);
+    setShowDetails(true);
   };
 
   const handleSubmit = async (goalData: Omit<Goal, 'id' | 'user_id' | 'created_at' | 'current_amount' | 'status'>) => {
@@ -92,7 +101,7 @@ const Metas = () => {
             <Target className="h-7 w-7 text-primary" />
             <span>Metas Financeiras ({currentWorkspace})</span>
           </h1>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => { setEditingGoal(undefined); setShowForm(true); }}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Meta
           </Button>
@@ -104,15 +113,15 @@ const Metas = () => {
           <>
             {/* Resumo das Metas */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-blue-50 border-blue-200 md:col-span-2">
+              <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 md:col-span-2">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center space-x-1">
                     <DollarSign className="h-4 w-4" />
                     Progresso Total
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-800">
+                  <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">
                     {formatCurrency(summary.totalCurrent)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -121,15 +130,15 @@ const Metas = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-yellow-50 border-yellow-200">
+              <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-yellow-700 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-400 flex items-center space-x-1">
                     <Clock className="h-4 w-4" />
                     Metas Ativas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-800">
+                  <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-300">
                     {summary.activeCount}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -138,15 +147,15 @@ const Metas = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-green-50 border-green-200">
+              <Card className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400 flex items-center space-x-1">
                     <CheckCircle className="h-4 w-4" />
                     Metas Concluídas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-800">
+                  <div className="text-2xl font-bold text-green-800 dark:text-green-300">
                     {summary.completedCount}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -170,7 +179,7 @@ const Metas = () => {
                   <GoalCard 
                     key={goal.id} 
                     goal={goal} 
-                    onEdit={handleEdit} 
+                    onEdit={handleDetails} // Abrir detalhes/editar
                     onDelete={deleteGoal}
                     onAddContribution={addContribution}
                     loading={actionLoading}
@@ -181,6 +190,37 @@ const Metas = () => {
           </>
         )}
       </div>
+      
+      {/* Modal de Detalhes e Histórico */}
+      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Detalhes da Meta: {editingGoal?.name}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleEdit(editingGoal!)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          {editingGoal && (
+            <div className="space-y-6">
+              <GoalCard 
+                goal={editingGoal} 
+                onEdit={handleEdit} 
+                onDelete={deleteGoal}
+                onAddContribution={addContribution}
+                loading={actionLoading}
+              />
+              <ContributionHistory goal={editingGoal} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

@@ -8,6 +8,8 @@ import { Investment } from '@/types/financial';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import InvestmentForm from '@/components/investimentos/InvestmentForm';
 import InvestmentCard from '@/components/investimentos/InvestmentCard';
+import DistributionChart from '@/components/investimentos/DistributionChart';
+import PerformanceChart from '@/components/investimentos/PerformanceChart';
 
 const formatCurrency = (value: number) => 
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -92,7 +94,7 @@ const Investimentos = () => {
             <DollarSign className="h-7 w-7 text-primary" />
             <span>Investimentos e Carteira ({currentWorkspace})</span>
           </h1>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => { setEditingInvestment(undefined); setShowForm(true); }}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Ativo
           </Button>
@@ -104,15 +106,15 @@ const Investimentos = () => {
           <>
             {/* Resumo da Carteira */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-l-4 border-l-blue-500">
+              <Card className="border-l-4 border-l-blue-500 dark:bg-blue-900/20 dark:border-blue-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center space-x-1">
                     <DollarSign className="h-4 w-4" />
                     Valor Atual da Carteira
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-800">
+                  <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">
                     {formatCurrency(summary.totalCurrent)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -121,15 +123,15 @@ const Investimentos = () => {
                 </CardContent>
               </Card>
               
-              <Card className={`border-l-4 ${summary.profitLoss >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+              <Card className={`border-l-4 ${summary.profitLoss >= 0 ? 'border-l-success' : 'border-l-error'} dark:bg-green-900/20 dark:border-green-800`}>
                 <CardHeader className="pb-2">
-                  <CardTitle className={`text-sm font-medium ${summary.profitLoss >= 0 ? 'text-green-700' : 'text-red-700'} flex items-center space-x-1`}>
+                  <CardTitle className={`text-sm font-medium ${summary.profitLoss >= 0 ? 'text-success' : 'text-error'} flex items-center space-x-1`}>
                     <TrendingUp className="h-4 w-4" />
                     Lucro/Prejuízo Total
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${summary.profitLoss >= 0 ? 'text-green-800' : 'text-red-800'}`}>
+                  <div className={`text-2xl font-bold ${summary.profitLoss >= 0 ? 'text-success dark:text-green-300' : 'text-error dark:text-red-300'}`}>
                     {formatCurrency(summary.profitLoss)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -138,15 +140,15 @@ const Investimentos = () => {
                 </CardContent>
               </Card>
               
-              <Card className="border-l-4 border-l-purple-500">
+              <Card className="border-l-4 border-l-purple-500 dark:bg-purple-900/20 dark:border-purple-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-purple-700 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-400 flex items-center space-x-1">
                     <Zap className="h-4 w-4" />
                     Total de Ativos
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-800">
+                  <div className="text-2xl font-bold text-purple-800 dark:text-purple-300">
                     {workspaceInvestments.length}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -154,6 +156,12 @@ const Investimentos = () => {
                   </p>
                 </CardContent>
               </Card>
+            </div>
+            
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <DistributionChart investments={workspaceInvestments} />
+              <PerformanceChart investments={workspaceInvestments} />
             </div>
 
             {/* Lista de Investimentos */}

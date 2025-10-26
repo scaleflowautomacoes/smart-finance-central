@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Car, Plus, Wrench } from 'lucide-react';
+import { Car, Plus, Wrench, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVehicles } from '@/hooks/useVehicles';
 import { Vehicle, Maintenance } from '@/types/financial';
@@ -9,7 +9,9 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import VehicleForm from '@/components/veiculos/VehicleForm';
 import MaintenanceForm from '@/components/veiculos/MaintenanceForm';
 import VehicleCard from '@/components/veiculos/VehicleCard';
+import MaintenanceHistory from '@/components/veiculos/MaintenanceHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const VeiculosManutencoes = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
@@ -19,6 +21,7 @@ const VeiculosManutencoes = () => {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | undefined>();
   const [editingMaintenance, setEditingMaintenance] = useState<Maintenance | undefined>();
   const [initialVehicleId, setInitialVehicleId] = useState<string | undefined>();
+  const [showVehicleDetails, setShowVehicleDetails] = useState(false);
   
   const { 
     vehicles, 
@@ -66,6 +69,17 @@ const VeiculosManutencoes = () => {
     setEditingMaintenance(undefined);
     setInitialVehicleId(vehicleId);
     setShowMaintenanceForm(true);
+  };
+  
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setShowVehicleForm(true);
+    setShowVehicleDetails(false);
+  };
+  
+  const handleShowDetails = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setShowVehicleDetails(true);
   };
 
   if (loading) {
@@ -133,7 +147,7 @@ const VeiculosManutencoes = () => {
             <Car className="h-7 w-7 text-primary" />
             <span>Veículos e Manutenções ({currentWorkspace})</span>
           </h1>
-          <Button onClick={() => setShowVehicleForm(true)}>
+          <Button onClick={() => { setEditingVehicle(undefined); setShowVehicleForm(true); }}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Veículo
           </Button>
@@ -159,7 +173,7 @@ const VeiculosManutencoes = () => {
                     key={vehicle.id}
                     vehicle={vehicle}
                     maintenances={maintenances}
-                    onEdit={(v) => { setEditingVehicle(v); setShowVehicleForm(true); }}
+                    onEdit={handleShowDetails} // Abrir detalhes
                     onDelete={deleteVehicle}
                     onAddMaintenance={handleAddMaintenance}
                     loading={actionLoading}
@@ -210,6 +224,36 @@ const VeiculosManutencoes = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Modal de Detalhes do Veículo */}
+      <Dialog open={showVehicleDetails} onOpenChange={setShowVehicleDetails}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Detalhes do Veículo: {editingVehicle?.name}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleEditVehicle(editingVehicle!)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          {editingVehicle && (
+            <div className="space-y-6">
+              <MaintenanceHistory 
+                vehicle={editingVehicle} 
+                maintenances={maintenances} 
+                onDeleteMaintenance={deleteMaintenance}
+                loading={actionLoading}
+              />
+              {/* TODO: Adicionar Gráfico de Custos de Manutenção */}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
