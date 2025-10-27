@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,10 +15,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, addDays, subDays, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, addDays, subDays, subMonths, addMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export type PeriodType = 'current' | 'next' | 'next3' | 'next6' | '7days' | '15days' | '30days' | '60days' | '90days' | '6months' | '1year' | 'custom' | 'specific-month' | 'jan-2024' | 'feb-2024' | 'mar-2024' | 'apr-2024' | 'may-2024' | 'jun-2024' | 'jul-2024' | 'aug-2024' | 'sep-2024' | 'oct-2024' | 'nov-2024' | 'dec-2024' | 'jan-2025' | 'feb-2025' | 'mar-2025' | 'apr-2025' | 'may-2025' | 'jun-2025' | 'jul-2025' | 'aug-2025' | 'sep-2025' | 'oct-2025' | 'nov-2025' | 'dec-2025' | 'jan-2026' | 'feb-2026' | 'mar-2026' | 'apr-2026' | 'may-2026' | 'jun-2026' | 'jul-2026' | 'aug-2026' | 'sep-2026' | 'oct-2026' | 'nov-2026' | 'dec-2026';
+export type PeriodType = 'current' | 'next' | 'next3' | 'next6' | '7days' | '15days' | '30days' | '60days' | '90days' | '6months' | '1year' | 'current-year' | 'custom' | 'specific-month' | 'jan-2024' | 'feb-2024' | 'mar-2024' | 'apr-2024' | 'may-2024' | 'jun-2024' | 'jul-2024' | 'aug-2024' | 'sep-2024' | 'oct-2024' | 'nov-2024' | 'dec-2024' | 'jan-2025' | 'feb-2025' | 'mar-2025' | 'apr-2025' | 'may-2025' | 'jun-2025' | 'jul-2025' | 'aug-2025' | 'sep-2025' | 'oct-2025' | 'nov-2025' | 'dec-2025' | 'jan-2026' | 'feb-2026' | 'mar-2026' | 'apr-2026' | 'may-2026' | 'jun-2026' | 'jul-2026' | 'aug-2026' | 'sep-2026' | 'oct-2026' | 'nov-2026' | 'dec-2026';
 
 interface PeriodFilterProps {
   selectedPeriod: PeriodType;
@@ -35,9 +34,13 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
   onPeriodChange
 }) => {
   const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [isSpecificMonthOpen, setIsSpecificMonthOpen] = useState(false);
   const [tempStartDate, setTempStartDate] = useState<Date | undefined>(customStartDate);
   const [tempEndDate, setTempEndDate] = useState<Date | undefined>(customEndDate);
+
+  useEffect(() => {
+    setTempStartDate(customStartDate);
+    setTempEndDate(customEndDate);
+  }, [customStartDate, customEndDate]);
 
   const getCurrentPeriodLabel = () => {
     const now = new Date();
@@ -62,6 +65,8 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
         return 'Próximos 3 meses';
       case 'next6':
         return 'Próximos 6 meses';
+      case 'current-year':
+        return format(startOfYear(now), 'yyyy', { locale: ptBR });
       case '7days':
         return 'Últimos 7 dias';
       case '15days':
@@ -88,12 +93,8 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
 
   const handlePeriodSelect = (period: PeriodType) => {
     if (period === 'custom') {
+      // Abre o popover de customização, não chama onPeriodChange ainda
       setIsCustomOpen(true);
-      return;
-    }
-
-    if (period === 'specific-month') {
-      setIsSpecificMonthOpen(true);
       return;
     }
 
@@ -134,6 +135,10 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
         startDate = startOfMonth(addMonths(now, 1));
         endDate = endOfMonth(addMonths(now, 6));
         break;
+      case 'current-year':
+        startDate = startOfYear(now);
+        endDate = endOfYear(now);
+        break;
       case '7days':
         startDate = subDays(now, 7);
         endDate = now;
@@ -163,6 +168,7 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
         endDate = now;
         break;
       default:
+        // Fallback para o mês atual se o tipo for desconhecido
         startDate = startOfMonth(now);
         endDate = endOfMonth(now);
     }
@@ -172,46 +178,35 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
 
   const handleCustomPeriodApply = () => {
     if (tempStartDate && tempEndDate) {
-      onPeriodChange('custom', tempStartDate, tempEndDate);
+      // Garante que a data final inclua o dia inteiro
+      const finalEndDate = endOfDay(tempEndDate);
+      onPeriodChange('custom', tempStartDate, finalEndDate);
       setIsCustomOpen(false);
     }
+  };
+  
+  const endOfDay = (date: Date) => {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
   };
 
   const generateMonthOptions = () => {
     const options = [];
     const currentDate = new Date();
     
-    // Add previous year months
-    for (let month = 0; month < 12; month++) {
-      const year = currentDate.getFullYear() - 1;
+    // Gera meses para o ano anterior, atual e próximo
+    for (let yearOffset = -1; yearOffset <= 1; yearOffset++) {
+      const year = currentDate.getFullYear() + yearOffset;
       const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
       const monthLabels = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      options.push({
-        value: `${monthNames[month]}-${year}` as PeriodType,
-        label: `${monthLabels[month]} ${year}`
-      });
-    }
-    
-    // Add current year months
-    for (let month = 0; month < 12; month++) {
-      const year = currentDate.getFullYear();
-      const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-      const monthLabels = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      options.push({
-        value: `${monthNames[month]}-${year}` as PeriodType,
-        label: `${monthLabels[month]} ${year}`
-      });
-    }
-    
-    // Add next year months
-    for (let month = 0; month < 12; month++) {
-      const year = currentDate.getFullYear() + 1;
-      const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-      const monthLabels = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      options.push({
-        value: `${monthNames[month]}-${year}` as PeriodType,
-        label: `${monthLabels[month]} ${year}`
-      });
+      
+      for (let month = 0; month < 12; month++) {
+        options.push({
+          value: `${monthNames[month]}-${year}` as PeriodType,
+          label: `${monthLabels[month]} ${year}`
+        });
+      }
     }
     
     return options;
@@ -228,6 +223,7 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
         </SelectTrigger>
         <SelectContent className="max-h-80 overflow-y-auto bg-white border shadow-lg z-50">
           <SelectItem value="current">Mês atual</SelectItem>
+          <SelectItem value="current-year">Ano atual</SelectItem>
           <SelectItem value="next">Próximo mês</SelectItem>
           <SelectItem value="next3">Próximos 3 meses</SelectItem>
           <SelectItem value="next6">Próximos 6 meses</SelectItem>
@@ -262,6 +258,7 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
       {/* Custom Date Picker Dialog */}
       <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen}>
         <PopoverTrigger asChild>
+          {/* Trigger invisível para controlar o popover */}
           <div style={{ display: 'none' }} />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0 bg-white border shadow-lg z-50" align="start">

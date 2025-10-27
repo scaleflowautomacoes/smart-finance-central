@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import Dashboard from '@/components/Dashboard';
 import TransactionTable from '@/components/TransactionTable';
@@ -9,42 +8,44 @@ import { Transaction } from '@/types/financial';
 import { PeriodType } from '@/components/PeriodFilter';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
-const Index = () => {
-  const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>(() => {
-    const saved = localStorage.getItem('financial-workspace');
-    return (saved as 'PF' | 'PJ') || 'PF';
-  });
-  
-  const [showForm, setShowForm] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
-  
-  const [periodFilter, setPeriodFilter] = useState<{
-    type: PeriodType;
-    startDate?: Date;
-    endDate?: Date;
-  }>(() => {
-    const saved = localStorage.getItem('financial-period');
-    if (saved) {
+// Funções de inicialização para garantir que o estado seja lido apenas uma vez
+const getInitialWorkspace = (): 'PF' | 'PJ' => {
+  const saved = localStorage.getItem('financial-workspace');
+  return (saved as 'PF' | 'PJ') || 'PF';
+};
+
+const getInitialPeriodFilter = () => {
+  const saved = localStorage.getItem('financial-period');
+  if (saved) {
+    try {
       const parsed = JSON.parse(saved);
       return {
         ...parsed,
         startDate: parsed.startDate ? new Date(parsed.startDate) : startOfMonth(new Date()),
         endDate: parsed.endDate ? new Date(parsed.endDate) : endOfMonth(new Date())
       };
+    } catch (e) {
+      console.error("Failed to parse financial-period from localStorage", e);
     }
-    return {
-      type: 'current',
-      startDate: startOfMonth(new Date()),
-      endDate: endOfMonth(new Date())
-    };
-  });
+  }
+  return {
+    type: 'current' as PeriodType,
+    startDate: startOfMonth(new Date()),
+    endDate: endOfMonth(new Date())
+  };
+};
+
+const Index = () => {
+  const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>(getInitialWorkspace);
+  const [showForm, setShowForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
+  const [periodFilter, setPeriodFilter] = useState(getInitialPeriodFilter);
 
   const {
     transactions,
     categories,
     clients,
     loading,
-    actionLoading,
     addTransaction,
     updateTransaction,
     deleteTransaction,
@@ -52,21 +53,29 @@ const Index = () => {
     refreshData
   } = useSupabaseFinancialData();
 
+  // Efeitos para persistir o estado no localStorage
   useEffect(() => {
     localStorage.setItem('financial-workspace', currentWorkspace);
   }, [currentWorkspace]);
 
   useEffect(() => {
-    localStorage.setItem('financial-period', JSON.stringify(periodFilter));
+    // Salva apenas strings serializáveis
+    localStorage.setItem('financial-period', JSON.stringify({
+      type: periodFilter.type,
+      startDate: periodFilter.startDate?.toISOString(),
+      endDate: periodFilter.endDate?.toISOString(),
+    }));
   }, [periodFilter]);
 
-  const handlePeriodChange = (period: PeriodType, startDate?: Date, endDate?: Date) => {
-    setPeriodFilter({
-      type: period,
-      startDate,
-      endDate
-    });
-  };
+  const handlePeriodChange = useCallback((period: PeriodType, startDate?: Date, endDate?: Date) => {
+    if (startDate && endDate) {
+      setPeriodFilter({
+        type: period,
+        startDate,
+        endDate
+      });
+    }
+  }, []);
 
   const handleNewTransaction = () => {
     setEditingTransaction(undefined);
@@ -80,24 +89,17 @@ const Index = () => {
 
   const handleSubmitTransaction = async (transactionData: Omit<Transaction, 'id' | 'deletado'>) => {
     try {
-      console.log('🎯 Index.tsx - Recebendo dados da transação:', transactionData);
-      
       if (editingTransaction) {
-        console.log('✏️ Atualizando transação existente:', editingTransaction.id);
         await updateTransaction(editingTransaction.id, transactionData);
       } else {
-        console.log('➕ Criando nova transação');
         await addTransaction(transactionData);
       }
       
       // Forçar refresh dos dados após salvar
-      console.log('🔄 Forçando refresh dos dados...');
       await refreshData();
       
       setShowForm(false);
       setEditingTransaction(undefined);
-      
-      console.log('✅ Transação processada com sucesso');
     } catch (error) {
       console.error('❌ Erro ao salvar transação no Index.tsx:', error);
     }
@@ -121,7 +123,7 @@ const Index = () => {
       <Layout
         currentWorkspace={currentWorkspace}
         onWorkspaceChange={setCurrentWorkspace}
-        onNewTransaction={() => setShowForm(true)}
+        onNewTransaction={handleNewTransaction}
       >
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center space-y-2">
@@ -138,7 +140,7 @@ const Index = () => {
       <Layout
         currentWorkspace={currentWorkspace}
         onWorkspaceChange={setCurrentWorkspace}
-        onNewTransaction={() => setShowForm(true)}
+        onNewTransaction={handleNewTransaction}
       >
         <TransactionForm
           transaction={editingTransaction}
@@ -157,7 +159,7 @@ const Index = () => {
     <Layout
       currentWorkspace={currentWorkspace}
       onWorkspaceChange={setCurrentWorkspace}
-      onNewTransaction={() => setShowForm(true)}
+      onNewTransaction={handleNewTransaction}
     >
       <div className="space-y-4 lg:space-y-8">
         <Dashboard 
@@ -174,10 +176,7 @@ const Index = () => {
           transactions={transactions}
           workspace={currentWorkspace}
           periodFilter={periodFilter}
-          onEdit={(transaction: Transaction) => {
-            setEditingTransaction(transaction);
-            setShowForm(true);
-          }}
+          onEdit={handleEditTransaction}
           onDelete={deleteTransaction}
           loading={loading}
         />
