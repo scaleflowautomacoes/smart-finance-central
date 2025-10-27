@@ -40,7 +40,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterDependency, setFilterDependency] = useState<string>('all');
   const [filterRecurrence, setFilterRecurrence] = useState<string>('all');
   const [filterPayment, setFilterPayment] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -48,7 +47,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const debouncedFilterStatus = useDebounce(filterStatus, 300);
   const debouncedFilterType = useDebounce(filterType, 300);
   const debouncedFilterCategory = useDebounce(filterCategory, 300);
-  const debouncedFilterDependency = useDebounce(filterDependency, 300);
   const debouncedFilterRecurrence = useDebounce(filterRecurrence, 300);
   const debouncedFilterPayment = useDebounce(filterPayment, 300);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -59,7 +57,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       if (debouncedFilterStatus !== 'all' && t.status !== debouncedFilterStatus) return false;
       if (debouncedFilterType !== 'all' && t.tipo !== debouncedFilterType) return false;
       if (debouncedFilterCategory !== 'all' && t.categoria_id !== debouncedFilterCategory) return false;
-      if (debouncedFilterDependency !== 'all' && t.dependencia !== debouncedFilterDependency) return false;
+      // if (debouncedFilterDependency !== 'all' && t.dependencia !== debouncedFilterDependency) return false; // REMOVIDO
       if (debouncedFilterRecurrence !== 'all' && t.recorrencia !== debouncedFilterRecurrence) return false;
       if (debouncedFilterPayment !== 'all' && t.forma_pagamento !== debouncedFilterPayment) return false;
       if (debouncedSearchTerm && !t.nome.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) return false;
@@ -72,7 +70,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       
       return true;
     });
-  }, [transactions, workspace, debouncedFilterStatus, debouncedFilterType, debouncedFilterCategory, debouncedFilterDependency, debouncedFilterRecurrence, debouncedFilterPayment, debouncedSearchTerm, periodFilter]);
+  }, [transactions, workspace, debouncedFilterStatus, debouncedFilterType, debouncedFilterCategory, debouncedFilterRecurrence, debouncedFilterPayment, debouncedSearchTerm, periodFilter]);
 
   const formatCurrency = useMemo(() => {
     return new Intl.NumberFormat('pt-BR', {
@@ -127,7 +125,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setFilterStatus('all');
     setFilterType('all');
     setFilterCategory('all');
-    setFilterDependency('all');
+    // setFilterDependency('all'); // REMOVIDO
     setFilterRecurrence('all');
     setFilterPayment('all');
     setSearchTerm('');
@@ -186,8 +184,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           onStatusChange={setFilterStatus}
           filterCategory={filterCategory}
           onCategoryChange={setFilterCategory}
-          filterDependency={filterDependency}
-          onDependencyChange={setFilterDependency}
+          filterDependency={'all'} // Mantido para compatibilidade de interface, mas ignorado
+          onDependencyChange={() => {}} // Ignorado
           filterRecurrence={filterRecurrence}
           onRecurrenceChange={setFilterRecurrence}
           filterPayment={filterPayment}
@@ -216,9 +214,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <th className="text-left py-3 px-2 font-medium text-gray-700">Status</th>
                   <th className="text-left py-3 px-2 font-medium text-gray-700">Pagamento</th>
                   <th className="text-left py-3 px-2 font-medium text-gray-700">Recorrência</th>
-                  {workspace === 'PJ' && (
-                    <th className="text-left py-3 px-2 font-medium text-gray-700">Dependência</th>
-                  )}
+                  {/* REMOVIDO: Coluna Dependência */}
                   <th className="text-right py-3 px-2 font-medium text-gray-700">Ações</th>
                 </tr>
               </thead>
@@ -267,15 +263,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         </span>
                       )}
                     </td>
-                    {workspace === 'PJ' && (
-                      <td className="py-3 px-2">
-                        {transaction.dependencia && (
-                          <Badge variant="outline" className="text-xs">
-                            {transaction.dependencia}
-                          </Badge>
-                        )}
-                      </td>
-                    )}
+                    {/* REMOVIDO: Célula Dependência */}
                     <td className="py-3 px-2 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

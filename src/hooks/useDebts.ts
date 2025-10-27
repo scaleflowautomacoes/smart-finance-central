@@ -24,12 +24,12 @@ export const useDebts = () => {
 
       const convertedDebts: Debt[] = (data || []).map(d => ({
         ...d,
-        total_amount: parseFloat(d.total_amount),
-        remaining_amount: parseFloat(d.remaining_amount),
-        interest_rate: parseFloat(d.interest_rate),
-        installments_total: parseInt(d.installments_total),
-        installments_paid: parseInt(d.installments_paid),
-        payment_day: parseInt(d.payment_day),
+        total_amount: parseFloat(d.total_amount?.toString() || '0'),
+        remaining_amount: parseFloat(d.remaining_amount?.toString() || '0'),
+        interest_rate: parseFloat(d.interest_rate?.toString() || '0'),
+        installments_total: parseInt(d.installments_total?.toString() || '0'),
+        installments_paid: parseInt(d.installments_paid?.toString() || '0'),
+        payment_day: parseInt(d.payment_day?.toString() || '1'),
         status: d.status as 'active' | 'paid' | 'late',
         workspace: d.workspace as 'PF' | 'PJ',
       }));
@@ -126,21 +126,24 @@ export const useDebts = () => {
     
     setActionLoading(true);
     try {
-      const principal = debt.total_amount / debt.installments_total;
-      const interest = (debt.remaining_amount * debt.interest_rate) / 100 / 12; // Simplificado
-      const paymentAmount = principal + interest;
+      // Simplificação: assumimos que o pagamento reduz o saldo pelo valor da parcela (ignorando juros compostos na simulação visual)
+      const installmentValue = debt.total_amount / debt.installments_total;
       
-      const newRemaining = Math.max(0, debt.remaining_amount - paymentAmount);
+      const newRemaining = Math.max(0, debt.remaining_amount - installmentValue);
       const newPaid = debt.installments_paid + 1;
       const newStatus = newPaid >= debt.installments_total ? 'paid' : 'active';
-
+      
+      // Calcular a próxima data de vencimento (adicionar 1 mês à data de vencimento atual)
+      const currentDueDate = new Date(debt.due_date);
+      const nextDueDate = new Date(currentDueDate.setMonth(currentDueDate.getMonth() + 1));
+      
       const { error } = await supabase
         .from('debts')
         .update({
           remaining_amount: newRemaining,
           installments_paid: newPaid,
           status: newStatus,
-          due_date: newStatus === 'active' ? new Date(new Date(debt.due_date).setMonth(new Date(debt.due_date).getMonth() + 1)).toISOString().split('T')[0] : debt.due_date
+          due_date: newStatus === 'active' ? nextDueDate.toISOString().split('T')[0] : debt.due_date
         })
         .eq('id', debt.id)
         .eq('user_id', userId);
