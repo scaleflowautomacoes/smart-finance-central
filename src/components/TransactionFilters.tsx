@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import DependencyFilter from './DependencyFilter';
 
 interface TransactionFiltersProps {
   searchTerm: string;
@@ -15,8 +13,6 @@ interface TransactionFiltersProps {
   onStatusChange: (value: string) => void;
   filterCategory: string;
   onCategoryChange: (value: string) => void;
-  filterDependency: string;
-  onDependencyChange: (value: string) => void;
   filterRecurrence: string;
   onRecurrenceChange: (value: string) => void;
   filterPayment: string;
@@ -35,8 +31,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onStatusChange,
   filterCategory,
   onCategoryChange,
-  filterDependency,
-  onDependencyChange,
   filterRecurrence,
   onRecurrenceChange,
   filterPayment,
@@ -103,12 +97,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           </SelectContent>
         </Select>
       </div>
-
-      <DependencyFilter
-        selectedDependency={filterDependency}
-        onDependencyChange={onDependencyChange}
-        workspace={workspace}
-      />
       
       <div className="space-y-2">
         <Label>Recorrência</Label>

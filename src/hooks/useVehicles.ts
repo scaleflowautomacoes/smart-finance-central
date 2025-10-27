@@ -4,6 +4,21 @@ import { Vehicle, Maintenance } from '@/types/financial';
 import { useToastNotifications } from './useToastNotifications';
 import { useMockUserId } from './useMockUserId';
 
+const convertToVehicle = (data: any): Vehicle => ({
+  ...data,
+  year: parseInt(data.year),
+  current_km: parseInt(data.current_km),
+  workspace: data.workspace as 'PF' | 'PJ',
+});
+
+const convertToMaintenance = (data: any): Maintenance => ({
+  ...data,
+  cost: parseFloat(data.cost),
+  km_performed: parseInt(data.km_performed),
+  next_km: data.next_km ? parseInt(data.next_km) : undefined,
+  type: data.type as Maintenance['type'],
+});
+
 export const useVehicles = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [maintenances, setMaintenances] = useState<Maintenance[]>([]);
@@ -24,8 +39,11 @@ export const useVehicles = () => {
       if (vehiclesRes.error) throw vehiclesRes.error;
       if (maintenancesRes.error) throw maintenancesRes.error;
 
-      setVehicles(vehiclesRes.data || []);
-      setMaintenances(maintenancesRes.data || []);
+      const convertedVehicles = (vehiclesRes.data || []).map(convertToVehicle);
+      const convertedMaintenances = (maintenancesRes.data || []).map(convertToMaintenance);
+
+      setVehicles(convertedVehicles);
+      setMaintenances(convertedMaintenances);
     } catch (error) {
       console.error('Erro ao carregar dados de veículos:', error);
       showError('Erro ao carregar veículos e manutenções.');

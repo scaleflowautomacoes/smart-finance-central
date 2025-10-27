@@ -13,6 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PaymentTimeline from '@/components/dividas/PaymentTimeline';
 import DebtChart from '@/components/dividas/DebtChart';
+import DebtSimulator from '@/components/dividas/DebtSimulator';
 
 const formatCurrency = (value: number) => 
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -170,6 +171,9 @@ const Dividas = () => {
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Simulador de Quitação */}
+            <DebtSimulator />
 
             {/* Lista de Dívidas */}
             <h2 className="text-xl font-semibold mt-6 mb-4">Dívidas Ativas</h2>
