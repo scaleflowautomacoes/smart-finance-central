@@ -2,7 +2,6 @@ import React from 'react';
 import { Building2, User, Plus, Settings, LogOut, Scale, TrendingUp, Target, Car, DollarSign, Briefcase, LayoutDashboard, Menu } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'; // Import Sheet components
 
@@ -30,13 +29,13 @@ const Layout: React.FC<LayoutProps> = ({
   onWorkspaceChange, 
   onNewTransaction 
 }) => {
-  const { logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
+  // Ação de logout simulada ou removida, pois não há autenticação real
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    // Apenas redireciona para a raiz, pois não há sessão para encerrar
+    navigate('/');
   };
   
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -99,7 +98,7 @@ const Layout: React.FC<LayoutProps> = ({
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 mr-3" />
-          Sair
+          Sair (Desativado)
         </Button>
       </div>
     </div>

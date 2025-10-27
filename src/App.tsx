@@ -3,11 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
-import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Dividas from "./pages/Dividas";
 import Relatorios from "./pages/Relatorios";
@@ -22,33 +19,30 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SupabaseAuthProvider>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              
-              {/* NOVOS MÓDULOS */}
-              <Route path="/dividas" element={<ProtectedRoute><Dividas /></ProtectedRoute>} />
-              <Route path="/relatorios" element={<ProtectedRoute><Relatorios /></ProtectedRoute>} />
-              <Route path="/metas" element={<ProtectedRoute><Metas /></ProtectedRoute>} />
-              <Route path="/veiculos" element={<ProtectedRoute><VeiculosManutencoes /></ProtectedRoute>} />
-              <Route path="/investimentos" element={<ProtectedRoute><Investimentos /></ProtectedRoute>} />
-              <Route path="/fluxo-de-caixa" element={<ProtectedRoute><FluxoDeCaixa /></ProtectedRoute>} />
-              <Route path="/lucro" element={<ProtectedRoute><Lucro /></ProtectedRoute>} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </SupabaseAuthProvider>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/settings" element={<Settings />} />
+            
+            {/* NOVOS MÓDULOS */}
+            <Route path="/dividas" element={<Dividas />} />
+            <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/metas" element={<Metas />} />
+            <Route path="/veiculos" element={<VeiculosManutencoes />} />
+            <Route path="/investimentos" element={<Investimentos />} />
+            <Route path="/fluxo-de-caixa" element={<FluxoDeCaixa />} />
+            <Route path="/lucro" element={<Lucro />} />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
