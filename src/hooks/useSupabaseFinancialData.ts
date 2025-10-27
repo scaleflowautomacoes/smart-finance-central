@@ -62,27 +62,7 @@ export const useSupabaseFinancialData = () => {
   const { showSuccess, showError } = useToastNotifications();
   const userId = useMockUserId(); // Obtendo o user ID mockado
 
-  const loadInitialData = useCallback(async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadTransactions(),
-        loadCategories(),
-        loadClients()
-      ]);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      showError('Erro ao carregar dados. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
-
-  useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
-
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('transactions')
@@ -99,9 +79,9 @@ export const useSupabaseFinancialData = () => {
       showError('Erro ao carregar transações');
       throw error;
     }
-  };
+  }, [showError, userId]);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -120,9 +100,9 @@ export const useSupabaseFinancialData = () => {
       console.error('Erro ao carregar categorias:', error);
       setCategories([]);
     }
-  };
+  }, [showError, userId]);
 
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('responsaveis')
@@ -142,7 +122,27 @@ export const useSupabaseFinancialData = () => {
       console.error('Erro ao carregar responsáveis:', error);
       setClients([]);
     }
-  };
+  }, [showError, userId]);
+
+  const loadInitialData = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadTransactions(),
+        loadCategories(),
+        loadClients()
+      ]);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      showError('Erro ao carregar dados. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  }, [showError, loadTransactions, loadCategories, loadClients]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const calculateMetrics = useCallback((origem: 'PF' | 'PJ', startDate?: Date, endDate?: Date): DashboardMetrics => {
     let filteredTransactions = transactions.filter(t => 
