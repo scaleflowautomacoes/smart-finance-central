@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Investment } from '@/types/financial';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { PieChart as PieChartIcon } from 'lucide-react';
+import { PieChart as PieChartIcon, DollarSign } from 'lucide-react';
 import { CHART_COLORS, formatCurrency, getRandomCategoryColor } from '@/utils/chartColors';
 import { useTheme } from 'next-themes';
 
