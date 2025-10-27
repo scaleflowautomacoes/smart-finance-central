@@ -2,7 +2,7 @@ import React from 'react';
 import { Building2, User, Plus, Settings, LogOut, Scale, TrendingUp, Target, Car, DollarSign, Briefcase, LayoutDashboard, Menu } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'; // Import Sheet components
 
