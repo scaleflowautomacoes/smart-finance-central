@@ -33,7 +33,7 @@ const convertToTransaction = (data: any): Transaction => {
     recorrencia_ocorrencia_atual: data.recorrencia_ocorrencia_atual,
     recorrencia_transacao_pai_id: data.recorrencia_transacao_pai_id,
     recorrencia_proxima_data: data.recorrencia_proxima_data,
-    recorrencia_ativa: data.recorrencia_ativa !== false
+    recorrencia_ativa: data.recorrencia_ativa !== false // Supabase defaults to TRUE, so only explicit FALSE is false
   };
 };
 
@@ -236,11 +236,13 @@ export const useSupabaseFinancialData = () => {
       
       if (transaction.is_recorrente && transaction.recorrencia_total_ocorrencias && transaction.recorrencia_total_ocorrencias > 1) {
         try {
+          // Chama a função RPC para gerar as transações filhas
           const { error: rpcError } = await supabase.rpc('gerar_proximas_transacoes_recorrentes');
           if (rpcError) {
             console.warn('Erro ao gerar transações recorrentes:', rpcError);
           }
           
+          // Pequeno delay para garantir que o banco processou a RPC antes de recarregar
           setTimeout(async () => {
             await loadTransactions();
           }, 1000);
@@ -265,19 +267,34 @@ export const useSupabaseFinancialData = () => {
     try {
       setActionLoading(true);
       
-      const updateData = {
-        ...updates,
-        cliente_id: updates.cliente_id || null,
-        categoria_id: updates.categoria_id || null,
-        subcategoria_id: updates.subcategoria_id || null,
-        dependencia: updates.dependencia || null,
-        recorrencia: updates.recorrencia || null,
-        observacoes: updates.observacoes || null,
-        recorrencia_tipo: updates.recorrencia_tipo || null,
-        recorrencia_total_ocorrencias: updates.recorrencia_total_ocorrencias || null,
-        recorrencia_transacao_pai_id: updates.recorrencia_transacao_pai_id || null,
-        recorrencia_proxima_data: updates.recorrencia_proxima_data || null
-      };
+      // Cria um objeto de atualização, mapeando undefined/vazio para null para o Supabase
+      const updateData: Record<string, any> = {};
+      
+      Object.keys(updates).forEach(key => {
+        const value = updates[key as keyof Partial<Transaction>];
+        
+        if (value === undefined) {
+          // Ignora campos undefined
+          return;
+        }
+        
+        if (typeof value === 'string' && value.trim() === '') {
+          // Mapeia strings vazias para null
+          updateData[key] = null;
+        } else if (value === null) {
+          // Mantém null
+          updateData[key] = null;
+        } else if (typeof value === 'number' && isNaN(value)) {
+          // Mapeia NaN para null
+          updateData[key] = null;
+        } else {
+          // Usa o valor, incluindo booleans (true/false) e números válidos
+          updateData[key] = value;
+        }
+      });
+      
+      // Garante que o user_id não seja alterado
+      delete updateData.user_id;
       
       const previousTransactions = transactions;
       setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
