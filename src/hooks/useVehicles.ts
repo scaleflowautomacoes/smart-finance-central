@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Vehicle, Maintenance } from '@/types/financial';
 import { useToastNotifications } from './useToastNotifications';
+import { useMockUserId } from './useMockUserId';
 
 export const useVehicles = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -9,14 +10,15 @@ export const useVehicles = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
+  const userId = useMockUserId();
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       
       const [vehiclesRes, maintenancesRes] = await Promise.all([
-        supabase.from('vehicles').select('*').order('name'),
-        supabase.from('maintenances').select('*').order('date_performed', { ascending: false }),
+        supabase.from('vehicles').select('*').eq('user_id', userId).order('name'),
+        supabase.from('maintenances').select('*').eq('user_id', userId).order('date_performed', { ascending: false }),
       ]);
 
       if (vehiclesRes.error) throw vehiclesRes.error;
@@ -30,7 +32,7 @@ export const useVehicles = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, userId]);
 
   useEffect(() => {
     loadData();
@@ -41,7 +43,7 @@ export const useVehicles = () => {
   const addVehicle = async (vehicle: Omit<Vehicle, 'id' | 'user_id' | 'created_at'>) => {
     setActionLoading(true);
     try {
-      const insertData = { ...vehicle, user_id: 'mock_user_id' };
+      const insertData = { ...vehicle, user_id: userId };
       const { error } = await supabase.from('vehicles').insert([insertData]);
       if (error) throw error;
       showSuccess('Veículo cadastrado com sucesso!');
@@ -56,7 +58,7 @@ export const useVehicles = () => {
   const updateVehicle = async (id: string, updates: Partial<Vehicle>) => {
     setActionLoading(true);
     try {
-      const { error } = await supabase.from('vehicles').update(updates).eq('id', id);
+      const { error } = await supabase.from('vehicles').update(updates).eq('id', id).eq('user_id', userId);
       if (error) throw error;
       showSuccess('Veículo atualizado com sucesso!');
       await loadData();
@@ -70,7 +72,7 @@ export const useVehicles = () => {
   const deleteVehicle = async (id: string) => {
     setActionLoading(true);
     try {
-      const { error } = await supabase.from('vehicles').delete().eq('id', id);
+      const { error } = await supabase.from('vehicles').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       showSuccess('Veículo excluído com sucesso!');
       await loadData();
@@ -86,7 +88,7 @@ export const useVehicles = () => {
   const addMaintenance = async (maintenance: Omit<Maintenance, 'id' | 'user_id' | 'created_at'>) => {
     setActionLoading(true);
     try {
-      const insertData = { ...maintenance, user_id: 'mock_user_id' };
+      const insertData = { ...maintenance, user_id: userId };
       const { error } = await supabase.from('maintenances').insert([insertData]);
       if (error) throw error;
       showSuccess('Manutenção registrada com sucesso!');
@@ -101,7 +103,7 @@ export const useVehicles = () => {
   const deleteMaintenance = async (id: string) => {
     setActionLoading(true);
     try {
-      const { error } = await supabase.from('maintenances').delete().eq('id', id);
+      const { error } = await supabase.from('maintenances').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       showSuccess('Manutenção excluída com sucesso!');
       await loadData();

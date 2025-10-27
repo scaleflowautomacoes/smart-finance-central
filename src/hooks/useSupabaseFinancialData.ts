@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Category, Client, DashboardMetrics } from '@/types/financial';
 import { isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { useToastNotifications } from './useToastNotifications';
+import { useMockUserId } from './useMockUserId'; // Importando o mock user ID
 
 // Helper functions para converter dados do Supabase para nossos tipos
 const convertToTransaction = (data: any): Transaction => {
@@ -59,6 +60,7 @@ export const useSupabaseFinancialData = () => {
   const [actionLoading, setActionLoading] = useState(false);
   
   const { showSuccess, showError } = useToastNotifications();
+  const userId = useMockUserId(); // Obtendo o user ID mockado
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -74,7 +76,7 @@ export const useSupabaseFinancialData = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     loadInitialData();
@@ -86,6 +88,7 @@ export const useSupabaseFinancialData = () => {
         .from('transactions')
         .select('*')
         .eq('deletado', false)
+        .eq('user_id', userId) // Filtrar por user_id
         .order('data', { ascending: false });
 
       if (error) throw error;
@@ -103,6 +106,7 @@ export const useSupabaseFinancialData = () => {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
+        .eq('user_id', userId) // Filtrar por user_id
         .order('nome');
 
       if (error) {
@@ -124,6 +128,7 @@ export const useSupabaseFinancialData = () => {
         .from('responsaveis')
         .select('*')
         .eq('ativo', true)
+        .eq('user_id', userId) // Filtrar por user_id
         .order('nome');
 
       if (error) {
@@ -216,7 +221,7 @@ export const useSupabaseFinancialData = () => {
         recorrencia_proxima_data: transaction.recorrencia_proxima_data || null,
         recorrencia_ativa: transaction.recorrencia_ativa !== false ? true : false,
         deletado: false,
-        user_id: null
+        user_id: userId // Adicionando o user_id
       };
 
       const { data, error } = await supabase
@@ -280,7 +285,8 @@ export const useSupabaseFinancialData = () => {
       const { error } = await supabase
         .from('transactions')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId); // Garantir que só atualiza a própria transação
 
       if (error) {
         setTransactions(previousTransactions);
@@ -310,7 +316,8 @@ export const useSupabaseFinancialData = () => {
       const { error } = await supabase
         .from('transactions')
         .update({ deletado: true })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId); // Garantir que só deleta a própria transação
 
       if (error) {
         setTransactions(previousTransactions);
@@ -334,9 +341,14 @@ export const useSupabaseFinancialData = () => {
     try {
       setActionLoading(true);
 
+      const insertData = {
+        ...category,
+        user_id: userId // Adicionando o user_id
+      };
+
       const { data, error } = await supabase
         .from('categories')
-        .insert([category])
+        .insert([insertData])
         .select()
         .single();
 

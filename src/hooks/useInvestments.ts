@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Investment } from '@/types/financial';
 import { useToastNotifications } from './useToastNotifications';
+import { useMockUserId } from './useMockUserId';
 
 export const useInvestments = () => {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
+  const userId = useMockUserId();
 
   const loadInvestments = useCallback(async () => {
     try {
@@ -15,6 +17,7 @@ export const useInvestments = () => {
       const { data, error } = await supabase
         .from('investments')
         .select('*')
+        .eq('user_id', userId)
         .order('purchase_date', { ascending: false });
 
       if (error) throw error;
@@ -37,7 +40,7 @@ export const useInvestments = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, userId]);
 
   useEffect(() => {
     loadInvestments();
@@ -50,7 +53,7 @@ export const useInvestments = () => {
         ...investment, 
         current_amount: investment.initial_amount, // Inicialmente, o valor atual é o inicial
         status: 'active',
-        user_id: 'mock_user_id',
+        user_id: userId,
       };
 
       const { error } = await supabase
@@ -75,7 +78,8 @@ export const useInvestments = () => {
       const { error } = await supabase
         .from('investments')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -94,7 +98,8 @@ export const useInvestments = () => {
       const { error } = await supabase
         .from('investments')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -113,7 +118,8 @@ export const useInvestments = () => {
       const { error } = await supabase
         .from('investments')
         .update({ current_amount: newAmount })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 

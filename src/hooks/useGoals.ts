@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Goal } from '@/types/financial';
 import { useToastNotifications } from './useToastNotifications';
+import { useMockUserId } from './useMockUserId';
 
 export const useGoals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
+  const userId = useMockUserId();
 
   const loadGoals = useCallback(async () => {
     try {
@@ -15,6 +17,7 @@ export const useGoals = () => {
       const { data, error } = await supabase
         .from('goals')
         .select('*')
+        .eq('user_id', userId)
         .order('deadline', { ascending: true });
 
       if (error) throw error;
@@ -36,7 +39,7 @@ export const useGoals = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, userId]);
 
   useEffect(() => {
     loadGoals();
@@ -49,7 +52,7 @@ export const useGoals = () => {
         ...goal,
         current_amount: 0, // Começa em zero
         status: 'active',
-        user_id: 'mock_user_id',
+        user_id: userId,
       };
 
       const { error } = await supabase
@@ -74,7 +77,8 @@ export const useGoals = () => {
       const { error } = await supabase
         .from('goals')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -94,7 +98,8 @@ export const useGoals = () => {
       const { error } = await supabase
         .from('goals')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -123,7 +128,8 @@ export const useGoals = () => {
           current_amount: newAmount,
           status: newStatus,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 

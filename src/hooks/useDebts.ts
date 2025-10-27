@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Debt } from '@/types/financial';
 import { useToastNotifications } from './useToastNotifications';
+import { useMockUserId } from './useMockUserId';
 
 export const useDebts = () => {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
+  const userId = useMockUserId();
 
   const loadDebts = useCallback(async () => {
     try {
@@ -15,6 +17,7 @@ export const useDebts = () => {
       const { data, error } = await supabase
         .from('debts')
         .select('*')
+        .eq('user_id', userId)
         .order('due_date', { ascending: true });
 
       if (error) throw error;
@@ -39,7 +42,7 @@ export const useDebts = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, userId]);
 
   useEffect(() => {
     loadDebts();
@@ -53,7 +56,7 @@ export const useDebts = () => {
         ...debt,
         remaining_amount: debt.total_amount,
         installments_paid: 0,
-        user_id: 'mock_user_id', // Substituir por auth real
+        user_id: userId,
       };
 
       const { error } = await supabase
@@ -78,7 +81,8 @@ export const useDebts = () => {
       const { error } = await supabase
         .from('debts')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -98,7 +102,8 @@ export const useDebts = () => {
       const { error } = await supabase
         .from('debts')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -137,7 +142,8 @@ export const useDebts = () => {
           status: newStatus,
           due_date: newStatus === 'active' ? new Date(new Date(debt.due_date).setMonth(new Date(debt.due_date).getMonth() + 1)).toISOString().split('T')[0] : debt.due_date
         })
-        .eq('id', debt.id);
+        .eq('id', debt.id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
