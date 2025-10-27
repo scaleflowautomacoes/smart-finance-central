@@ -42,7 +42,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     cliente_id: '',
     categoria_id: '',
     subcategoria_id: '',
-    // dependencia: '' as '' | 'Infoprodutos' | 'Chips' | 'Automações' | 'Disparos' | 'Co-produção', // REMOVIDO
+    dependencia: '' as '' | 'Infoprodutos' | 'Chips' | 'Automações' | 'Disparos' | 'Co-produção',
     recorrencia: '' as '' | 'Setup' | 'Fee Mensal' | 'Avulso',
     observacoes: '',
     // Novos campos de recorrência
@@ -68,7 +68,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         cliente_id: transaction.cliente_id || '',
         categoria_id: transaction.categoria_id || '',
         subcategoria_id: transaction.subcategoria_id || '',
-        // dependencia: transaction.dependencia || '', // REMOVIDO
+        dependencia: transaction.dependencia || '',
         recorrencia: transaction.recorrencia || '',
         observacoes: transaction.observacoes || '',
         is_recorrente: transaction.is_recorrente || false,
@@ -121,7 +121,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         cliente_id: formData.cliente_id || undefined,
         categoria_id: formData.categoria_id || undefined,
         subcategoria_id: formData.subcategoria_id || undefined,
-        dependencia: undefined, // Definido como undefined
+        dependencia: formData.dependencia || undefined,
         recorrencia: formData.recorrencia || undefined,
         observacoes: formData.observacoes?.trim() || undefined,
         // Campos de recorrência
@@ -322,8 +322,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 </Select>
               </div>
 
-              {/* REMOVIDO: Dependência */}
-              {/* {workspace === 'PJ' && (
+              {workspace === 'PJ' && (
                 <div className="space-y-2">
                   <Label htmlFor="dependencia">Dependência</Label>
                   <Select value={formData.dependencia} onValueChange={(value) => updateFormData('dependencia', value)}>
@@ -339,7 +338,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
-              )} */}
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="recorrencia">Recorrência</Label>

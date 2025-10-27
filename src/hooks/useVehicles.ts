@@ -24,23 +24,8 @@ export const useVehicles = () => {
       if (vehiclesRes.error) throw vehiclesRes.error;
       if (maintenancesRes.error) throw maintenancesRes.error;
 
-      const convertedVehicles: Vehicle[] = (vehiclesRes.data || []).map(v => ({
-        ...v,
-        year: parseInt(v.year?.toString() || '0'),
-        current_km: parseInt(v.current_km?.toString() || '0'),
-        workspace: v.workspace as 'PF' | 'PJ',
-      }));
-      
-      const convertedMaintenances: Maintenance[] = (maintenancesRes.data || []).map(m => ({
-        ...m,
-        cost: parseFloat(m.cost?.toString() || '0'),
-        km_performed: parseInt(m.km_performed?.toString() || '0'),
-        next_km: m.next_km ? parseInt(m.next_km.toString()) : undefined,
-        type: m.type as Maintenance['type'],
-      }));
-
-      setVehicles(convertedVehicles);
-      setMaintenances(convertedMaintenances);
+      setVehicles(vehiclesRes.data || []);
+      setMaintenances(maintenancesRes.data || []);
     } catch (error) {
       console.error('Erro ao carregar dados de veículos:', error);
       showError('Erro ao carregar veículos e manutenções.');
