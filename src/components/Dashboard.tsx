@@ -1,14 +1,16 @@
 import React, { useCallback } from 'react';
 import { Transaction, Category } from '@/types/financial';
-import PeriodFilter, { PeriodType } from './PeriodFilter';
+import PeriodFilter from './PeriodFilter';
 import DashboardMetricsGrid from './DashboardMetricsGrid';
 import DashboardRecentTransactions from './DashboardRecentTransactions';
 import DashboardCharts from './DashboardCharts';
 import CategoryCharts from './CategoryCharts';
+import DashboardFutureProjection from './DashboardFutureProjection'; // <-- NOVO IMPORT
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { PeriodType } from './PeriodFilter'; // Importando PeriodType
 
 interface DashboardProps {
   workspace: 'PF' | 'PJ';
@@ -98,12 +100,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         />
       )}
 
-      {/* Últimas Transações */}
-      <DashboardRecentTransactions 
-        transactions={transactions} 
-        categories={categories} 
-        workspace={workspace} 
-      />
+      {/* Projeção Futura e Últimas Transações */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DashboardFutureProjection workspace={workspace} />
+        <DashboardRecentTransactions 
+          transactions={transactions} 
+          categories={categories} 
+          workspace={workspace} 
+        />
+      </div>
 
       {/* Gráficos */}
       <div className="space-y-4 lg:space-y-6">

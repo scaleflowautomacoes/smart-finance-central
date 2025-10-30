@@ -60,12 +60,13 @@ const Index = () => {
     refreshData
   } = useSupabaseFinancialData();
 
-  // DEBUG LOG: Verificar se as transações estão sendo carregadas
+  // Efeito para recarregar dados sempre que o filtro de período mudar
   useEffect(() => {
-    if (!loading) {
-      console.log(`[Index] Transações carregadas: ${transactions.length}`);
+    if (!loading && periodFilter.startDate && periodFilter.endDate) {
+      console.log(`🔄 Aplicando filtro de período: ${periodFilter.type}`);
+      refreshData(periodFilter.startDate, periodFilter.endDate);
     }
-  }, [loading, transactions]);
+  }, [periodFilter.startDate, periodFilter.endDate, refreshData, loading]);
 
   useEffect(() => {
     localStorage.setItem('financial-workspace', currentWorkspace);
@@ -110,9 +111,9 @@ const Index = () => {
         await addTransaction(transactionData);
       }
       
-      // Forçar refresh dos dados após salvar
+      // Forçar refresh dos dados após salvar, mantendo o filtro de período atual
       console.log('🔄 Forçando refresh dos dados...');
-      await refreshData();
+      await refreshData(periodFilter.startDate, periodFilter.endDate);
       
       setShowForm(false);
       setEditingTransaction(undefined);

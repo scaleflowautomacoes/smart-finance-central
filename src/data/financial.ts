@@ -4,6 +4,14 @@ import { useMockUserId } from '@/hooks/useMockUserId';
 
 const userId = useMockUserId();
 
+// Helper function to map empty strings/undefined to null for Supabase
+const mapToNullable = (value: any) => {
+  if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+    return null;
+  }
+  return value;
+};
+
 // --- Converters ---
 
 const convertToTransaction = (data: any): Transaction => {
@@ -44,13 +52,23 @@ const convertToCategory = (data: any): Category => ({
 
 // --- Data Access Functions ---
 
-export async function fetchTransactions(): Promise<Transaction[]> {
-  const { data, error } = await supabase
+export async function fetchTransactions(startDate?: Date, endDate?: Date): Promise<Transaction[]> {
+  let query = supabase
     .from('transactions')
     .select('*')
     .eq('deletado', false)
-    .eq('user_id', userId)
-    .order('data', { ascending: false });
+    .eq('user_id', userId);
+
+  if (startDate) {
+    // Filtra por data inicial (>=)
+    query = query.gte('data', startDate.toISOString().split('T')[0]);
+  }
+  if (endDate) {
+    // Filtra por data final (<=)
+    query = query.lte('data', endDate.toISOString().split('T')[0]);
+  }
+
+  const { data, error } = await query.order('data', { ascending: false });
 
   if (error) throw error;
   return (data || []).map(convertToTransaction);
@@ -65,17 +83,17 @@ export async function createTransaction(transaction: Omit<Transaction, 'id' | 'd
     valor: transaction.valor,
     data: transaction.data,
     deletado: false,
-    // Mapear undefined/vazio para null para o Supabase
-    cliente_id: transaction.cliente_id || null,
-    categoria_id: transaction.categoria_id || null,
-    subcategoria_id: transaction.subcategoria_id || null,
-    dependencia: transaction.dependencia || null,
-    recorrencia: transaction.recorrencia || null,
-    observacoes: transaction.observacoes || null,
-    recorrencia_tipo: transaction.recorrencia_tipo || null,
-    recorrencia_total_ocorrencias: transaction.recorrencia_total_ocorrencias || null,
-    recorrencia_ocorrencia_atual: transaction.recorrencia_ocorrencia_atual || null,
-    recorrencia_transacao_pai_id: transaction.recorrencia_transacao_pai_id || null,
+    // Mapeamento seguro de campos opcionais para null
+    cliente_id: mapToNullable(transaction.cliente_id),
+    categoria_id: mapToNullable(transaction.categoria_id),
+    subcategoria_id: mapToNullable(transaction.subcategoria_id),
+    dependencia: mapToNullable(transaction.dependencia),
+    recorrencia: mapToNullable(transaction.recorrencia),
+    observacoes: mapToNullable(transaction.observacoes),
+    recorrencia_tipo: mapToNullable(transaction.recorrencia_tipo),
+    recorrencia_total_ocorrencias: mapToNullable(transaction.recorrencia_total_ocorrencias),
+    recorrencia_ocorrencia_atual: mapToNullable(transaction.recorrencia_ocorrencia_atual),
+    recorrencia_transacao_pai_id: mapToNullable(transaction.recorrencia_transacao_pai_id),
     recorrencia_ativa: transaction.recorrencia_ativa !== false,
   };
 

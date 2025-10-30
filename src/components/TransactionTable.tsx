@@ -52,21 +52,17 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const filteredTransactions = useMemo(() => {
+    // Os dados 'transactions' já vêm filtrados pelo período do hook pai.
     return transactions.filter(t => {
       if (t.deletado || t.origem !== workspace) return false;
       if (debouncedFilterStatus !== 'all' && t.status !== debouncedFilterStatus) return false;
       if (debouncedFilterType !== 'all' && t.tipo !== debouncedFilterType) return false;
       if (debouncedFilterCategory !== 'all' && t.categoria_id !== debouncedFilterCategory) return false;
-      // if (debouncedFilterDependency !== 'all' && t.dependencia !== debouncedFilterDependency) return false; // REMOVIDO
       if (debouncedFilterRecurrence !== 'all' && t.recorrencia !== debouncedFilterRecurrence) return false;
       if (debouncedFilterPayment !== 'all' && t.forma_pagamento !== debouncedFilterPayment) return false;
       if (debouncedSearchTerm && !t.nome.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) return false;
       
-      // Filter by period
-      if (periodFilter.startDate && periodFilter.endDate) {
-        const transactionDate = new Date(t.data);
-        if (transactionDate < periodFilter.startDate || transactionDate > periodFilter.endDate) return false;
-      }
+      // Remoção do filtro de data, pois já é feito na camada de dados.
       
       return true;
     });
