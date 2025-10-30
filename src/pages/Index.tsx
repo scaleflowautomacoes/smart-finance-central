@@ -7,6 +7,7 @@ import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import { Transaction } from '@/types/financial';
 import { PeriodType } from '@/components/PeriodFilter';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>(() => {
@@ -135,23 +136,6 @@ const Index = () => {
     setEditingTransaction(undefined);
   };
 
-  if (loading) {
-    return (
-      <Layout
-        currentWorkspace={currentWorkspace}
-        onWorkspaceChange={setCurrentWorkspace}
-        onNewTransaction={() => setShowForm(true)}
-      >
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-center space-y-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <div className="text-sm text-muted-foreground">Carregando dados...</div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
   if (showForm) {
     return (
       <Layout
@@ -168,6 +152,20 @@ const Index = () => {
           onCancel={handleCancelForm}
           onAddCategory={addCategory}
         />
+      </Layout>
+    );
+  }
+  
+  if (loading) {
+    return (
+      <Layout
+        currentWorkspace={currentWorkspace}
+        onWorkspaceChange={setCurrentWorkspace}
+        onNewTransaction={() => setShowForm(true)}
+      >
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <LoadingSpinner text="Carregando transações do Supabase..." />
+        </div>
       </Layout>
     );
   }

@@ -7,12 +7,7 @@ import { useTransactions } from './useTransactions';
 import { useAuxiliaryData } from './useAuxiliaryData';
 import { claimUnownedTransactions, generateRecurrences } from '@/data/financial';
 
-// --- SEED DATA (Dados Iniciais) ---
-// A lógica de seed foi movida para um arquivo separado ou será simplificada aqui.
-// Para manter a funcionalidade de seed, vamos reintroduzir a lógica de verificação de banco vazio.
-
-const SEED_CATEGORIES_NAMES = ['Salário', 'Aluguel', 'Alimentação', 'Vendas', 'Custos Fixos', 'Marketing'];
-
+// --- Funções de Cálculo (Mantidas) ---
 const calculateMetrics = (
   transactions: any[], // Usamos any[] aqui para evitar dependência circular de tipos
   origem: 'PF' | 'PJ', 
@@ -66,7 +61,7 @@ const calculateMetrics = (
 };
 
 export const useSupabaseFinancialData = () => {
-  const { showSuccess, showError } = useToastNotifications();
+  const { showSuccess } = useToastNotifications();
   const { 
     transactions, 
     loading: transactionsLoading, 
@@ -86,11 +81,14 @@ export const useSupabaseFinancialData = () => {
     addCategory 
   } = useAuxiliaryData();
 
-  const loading = transactionsLoading || auxiliaryLoading;
+  const [initialLoading, setInitialLoading] = useState(true);
+  const loading = transactionsLoading || auxiliaryLoading || initialLoading;
   const actionLoading = transactionActionLoading || auxiliaryActionLoading;
 
   const initialSetup = useCallback(async () => {
     try {
+      setInitialLoading(true);
+      
       // 1. Reivindicar transações sem user_id para o mock user
       const claimedCount = await claimUnownedTransactions();
       if (claimedCount > 0) {
@@ -98,15 +96,16 @@ export const useSupabaseFinancialData = () => {
         showSuccess(`${claimedCount} transações antigas foram restauradas!`);
       }
       
-      // 2. Garantir que as recorrências sejam geradas no início
+      // 2. Garantir que as recorrências sejam geradas
       await generateRecurrences();
       
-      // 3. Recarregar todos os dados após o setup
+      // 3. Recarregar todos os dados após o setup (Isso garante que o estado seja atualizado)
       await Promise.all([loadTransactions(), loadAuxiliaryData()]);
       
     } catch (error) {
       console.error('Erro durante o setup inicial:', error);
-      // Não mostramos erro crítico aqui, pois os hooks individuais já tratam falhas de carregamento.
+    } finally {
+      setInitialLoading(false);
     }
   }, [loadTransactions, loadAuxiliaryData, showSuccess]);
 
