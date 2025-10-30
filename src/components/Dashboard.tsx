@@ -60,7 +60,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="p-4 space-y-4 lg:space-y-6">
-      {/* Header e Filtros (Layout do Screenshot) */}
+      {/* Header e Filtros */}
       <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div>
           <h1 className="text-xl lg:text-3xl font-bold text-foreground">
@@ -71,15 +71,18 @@ const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
           <PeriodFilter
             selectedPeriod={periodFilter.type}
             customStartDate={periodFilter.startDate}
             customEndDate={periodFilter.endDate}
             onPeriodChange={handlePeriodChange}
           />
-          <Button onClick={onNewTransaction} className="hidden lg:flex">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={onNewTransaction} 
+            className="w-full sm:w-auto h-10 px-6 text-base font-semibold bg-primary hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-5 w-5 mr-2" />
             Nova Transação
           </Button>
         </div>
