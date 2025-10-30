@@ -158,7 +158,7 @@ export const useSupabaseFinancialData = () => {
       
       const { error: transError } = await supabase
         .from('transactions')
-        .insert(transactionsToInsert);
+        .insert(transactionsToInsert as any); // Usando 'as any' temporariamente para evitar erro de tipo na inserção de SEED data
 
       if (transError) throw transError;
       
@@ -396,7 +396,7 @@ export const useSupabaseFinancialData = () => {
 
       const { data, error } = await supabase
         .from('transactions')
-        .insert([insertData])
+        .insert([insertData] as any) // Usando 'as any' para evitar erro de tipo na inserção
         .select()
         .single();
 
