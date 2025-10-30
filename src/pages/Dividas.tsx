@@ -24,6 +24,7 @@ const Dividas = () => {
   const [editingDebt, setEditingDebt] = useState<Debt | undefined>();
   const [showDetails, setShowDetails] = useState(false);
   
+  // HOOKS DE DADOS E CÁLCULOS DEVEM ESTAR NO TOPO
   const { debts, loading, actionLoading, addDebt, updateDebt, deleteDebt, payInstallment } = useDebts();
 
   const workspaceDebts = useMemo(() => {
@@ -47,6 +48,7 @@ const Dividas = () => {
       nextDueAmount: nextDueDate ? (nextDueDate.total_amount / nextDueDate.installments_total) : 0
     };
   }, [workspaceDebts]);
+  // FIM DOS HOOKS E CÁLCULOS
 
   const handleEdit = (debt: Debt) => {
     setEditingDebt(debt);

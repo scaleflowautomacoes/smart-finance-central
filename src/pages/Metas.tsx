@@ -22,6 +22,7 @@ const Metas = () => {
   const [editingGoal, setEditingGoal] = useState<Goal | undefined>();
   const [showDetails, setShowDetails] = useState(false);
   
+  // HOOKS DE DADOS E CÁLCULOS DEVEM ESTAR NO TOPO
   const { goals, loading, actionLoading, addGoal, updateGoal, deleteGoal, addContribution } = useGoals();
   const { categories } = useSupabaseFinancialData();
 
@@ -46,6 +47,7 @@ const Metas = () => {
       nextDeadline: nextDeadline ? differenceInDays(new Date(nextDeadline.deadline), new Date()) : 'N/A',
     };
   }, [workspaceGoals]);
+  // FIM DOS HOOKS E CÁLCULOS
 
   const handleEdit = (goal: Goal) => {
     setEditingGoal(goal);
