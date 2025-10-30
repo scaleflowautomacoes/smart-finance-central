@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import Dashboard from '@/components/Dashboard';
@@ -23,20 +22,28 @@ const Index = () => {
     startDate?: Date;
     endDate?: Date;
   }>(() => {
+    const now = new Date();
+    const defaultPeriod = {
+      type: 'current' as PeriodType,
+      startDate: startOfMonth(now),
+      endDate: endOfMonth(now)
+    };
+    
     const saved = localStorage.getItem('financial-period');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        startDate: parsed.startDate ? new Date(parsed.startDate) : startOfMonth(new Date()),
-        endDate: parsed.endDate ? new Date(parsed.endDate) : endOfMonth(new Date())
-      };
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          startDate: parsed.startDate ? new Date(parsed.startDate) : defaultPeriod.startDate,
+          endDate: parsed.endDate ? new Date(parsed.endDate) : defaultPeriod.endDate
+        };
+      } catch (e) {
+        console.error("Failed to parse financial-period from localStorage", e);
+        return defaultPeriod;
+      }
     }
-    return {
-      type: 'current',
-      startDate: startOfMonth(new Date()),
-      endDate: endOfMonth(new Date())
-    };
+    return defaultPeriod;
   });
 
   const {
@@ -57,7 +64,12 @@ const Index = () => {
   }, [currentWorkspace]);
 
   useEffect(() => {
-    localStorage.setItem('financial-period', JSON.stringify(periodFilter));
+    // Salva apenas strings de data para evitar problemas de desserialização
+    localStorage.setItem('financial-period', JSON.stringify({
+      type: periodFilter.type,
+      startDate: periodFilter.startDate?.toISOString(),
+      endDate: periodFilter.endDate?.toISOString()
+    }));
   }, [periodFilter]);
 
   const handlePeriodChange = (period: PeriodType, startDate?: Date, endDate?: Date) => {
