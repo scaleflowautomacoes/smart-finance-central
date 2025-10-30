@@ -59,6 +59,13 @@ const Index = () => {
     refreshData
   } = useSupabaseFinancialData();
 
+  // DEBUG LOG: Verificar se as transações estão sendo carregadas
+  useEffect(() => {
+    if (!loading) {
+      console.log(`[Index] Transações carregadas: ${transactions.length}`);
+    }
+  }, [loading, transactions]);
+
   useEffect(() => {
     localStorage.setItem('financial-workspace', currentWorkspace);
   }, [currentWorkspace]);

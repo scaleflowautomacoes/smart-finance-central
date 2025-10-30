@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Category, Responsavel } from "@/types/financial";
 import { useToast } from "@/hooks/use-toast";
@@ -110,9 +110,11 @@ export const useSettings = () => {
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     setActionLoading(true);
     try {
+      const updatePayload = { ...updates, user_id: userId }; // Incluir user_id no payload para garantir RLS
+      
       const { data, error } = await supabase
         .from('categories')
-        .update(updates)
+        .update(updatePayload)
         .eq('id', id)
         .eq('user_id', userId)
         .select()
@@ -219,9 +221,11 @@ export const useSettings = () => {
   const updateResponsavel = async (id: string, updates: Partial<Responsavel>) => {
     setActionLoading(true);
     try {
+      const updatePayload = { ...updates, user_id: userId }; // Incluir user_id no payload para garantir RLS
+      
       const { data, error } = await supabase
         .from('responsaveis')
-        .update(updates)
+        .update(updatePayload)
         .eq('id', id)
         .eq('user_id', userId)
         .select()
