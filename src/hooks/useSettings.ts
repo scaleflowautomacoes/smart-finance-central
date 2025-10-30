@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Category, Responsavel } from "@/types/financial";
+import { Category, Responsavel, TablesInsert, TablesUpdate } from "@/types/financial";
 import { useToast } from "@/hooks/use-toast";
 import { useMockUserId } from "./useMockUserId";
+import { fetchCategories, fetchClients, createCategory } from "@/data/financial"; // Importando funções de acesso a dados
 
 export const useSettings = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -12,63 +13,12 @@ export const useSettings = () => {
   const { toast } = useToast();
   const userId = useMockUserId();
 
-  const loadCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', userId)
-        .order('nome');
-
-      if (error) {
-        console.warn('Erro ao carregar categorias (continuando):', error);
-        return [];
-      }
-
-      const typedCategories = (data || []).map(item => ({
-        ...item,
-        origem: item.origem as 'PF' | 'PJ',
-        tipo: item.tipo as 'entrada' | 'saida'
-      }));
-
-      return typedCategories;
-    } catch (error) {
-      console.error('Erro ao carregar categorias:', error);
-      return [];
-    }
-  };
-
-  const loadResponsaveis = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('responsaveis')
-        .select('*')
-        .eq('user_id', userId)
-        .order('nome');
-
-      if (error) {
-        console.warn('Erro ao carregar responsáveis (continuando):', error);
-        return [];
-      }
-
-      const typedResponsaveis = (data || []).map(item => ({
-        ...item,
-        tipo: item.tipo as 'recorrente' | 'avulso'
-      }));
-
-      return typedResponsaveis;
-    } catch (error) {
-      console.error('Erro ao carregar responsáveis:', error);
-      return [];
-    }
-  };
-  
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
       const [categoriesData, responsaveisData] = await Promise.all([
-        loadCategories(),
-        loadResponsaveis()
+        fetchCategories(),
+        fetchClients()
       ]);
       
       setCategories(categoriesData);
@@ -83,26 +33,8 @@ export const useSettings = () => {
   const addCategory = async (category: Omit<Category, 'id'>) => {
     setActionLoading(true);
     try {
-      const insertData = {
-        ...category,
-        user_id: userId
-      };
-      
-      const { data, error } = await supabase
-        .from('categories')
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const typedData = {
-        ...data,
-        origem: data.origem as 'PF' | 'PJ',
-        tipo: data.tipo as 'entrada' | 'saida'
-      };
-
-      setCategories(prev => [...prev, typedData]);
+      const newCategory = await createCategory(category);
+      setCategories(prev => [...prev, newCategory]);
       
       toast({
         title: "Sucesso",
@@ -125,7 +57,7 @@ export const useSettings = () => {
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     setActionLoading(true);
     try {
-      const updatePayload = { ...updates, user_id: userId }; // Incluir user_id no payload para garantir RLS
+      const updatePayload: TablesUpdate<'categories'> = { ...updates, user_id: userId };
       
       const { data, error } = await supabase
         .from('categories')
@@ -141,7 +73,7 @@ export const useSettings = () => {
         ...data,
         origem: data.origem as 'PF' | 'PJ',
         tipo: data.tipo as 'entrada' | 'saida'
-      };
+      } as Category;
 
       setCategories(prev => prev.map(cat => cat.id === id ? typedData : cat));
       
@@ -195,14 +127,14 @@ export const useSettings = () => {
   const addResponsavel = async (responsavel: Omit<Responsavel, 'id'>) => {
     setActionLoading(true);
     try {
-      const insertData = {
+      const insertData: TablesInsert<'responsaveis'> = {
         ...responsavel,
         user_id: userId
       };
       
       const { data, error } = await supabase
         .from('responsaveis')
-        .insert(insertData)
+        .insert([insertData])
         .select()
         .single();
 
@@ -211,7 +143,7 @@ export const useSettings = () => {
       const typedData = {
         ...data,
         tipo: data.tipo as 'recorrente' | 'avulso'
-      };
+      } as Responsavel;
 
       setResponsaveis(prev => [...prev, typedData]);
       
@@ -236,7 +168,7 @@ export const useSettings = () => {
   const updateResponsavel = async (id: string, updates: Partial<Responsavel>) => {
     setActionLoading(true);
     try {
-      const updatePayload = { ...updates, user_id: userId }; // Incluir user_id no payload para garantir RLS
+      const updatePayload: TablesUpdate<'responsaveis'> = { ...updates, user_id: userId };
       
       const { data, error } = await supabase
         .from('responsaveis')
@@ -251,7 +183,7 @@ export const useSettings = () => {
       const typedData = {
         ...data,
         tipo: data.tipo as 'recorrente' | 'avulso'
-      };
+      } as Responsavel;
 
       setResponsaveis(prev => prev.map(resp => resp.id === id ? typedData : resp));
       
