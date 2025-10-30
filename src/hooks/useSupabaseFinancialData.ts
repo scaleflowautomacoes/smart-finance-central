@@ -91,7 +91,7 @@ export const useSupabaseFinancialData = () => {
 
   const seedDatabaseIfEmpty = useCallback(async () => {
     try {
-      // 1. Verificar se há transações
+      // 1. Verificar se há transações para o usuário mockado
       const { count: transactionCount, error: countError } = await supabase
         .from('transactions')
         .select('id', { count: 'exact', head: true })
@@ -100,7 +100,7 @@ export const useSupabaseFinancialData = () => {
       if (countError) throw countError;
 
       if (transactionCount === 0) {
-        console.log('Database vazio. Inserindo dados iniciais...');
+        console.log('Database vazio para o usuário. Inserindo dados iniciais...');
         
         // 2. Inserir Categorias
         const categoriesToInsert = SEED_CATEGORIES.map(c => ({ ...c, user_id: userId }));
@@ -236,22 +236,48 @@ export const useSupabaseFinancialData = () => {
     try {
       setLoading(true);
       
-      // 1. Tenta inserir dados iniciais se o banco estiver vazio
-      await seedDatabaseIfEmpty();
+      // 1. Reivindicar transações sem user_id para o mock user
+      console.log('Reivindicando transações sem user_id...');
+      const { data: claimedCount, error: claimError } = await supabase.rpc('claim_unowned_transactions');
       
-      // 2. Carrega todos os dados
+      if (claimError) {
+        console.warn('Erro ao reivindicar transações:', claimError);
+        // Continuar mesmo com erro, pois o problema pode ser a RLS ou a função não existir
+      } else if (claimedCount > 0) {
+        console.log(`${claimedCount} transações reivindicadas.`);
+        showSuccess(`${claimedCount} transações antigas foram restauradas!`);
+      }
+      
+      // 2. Carrega todos os dados (agora incluindo os reivindicados)
       await Promise.all([
         loadTransactions(),
         loadCategories(),
         loadClients()
       ]);
+      
+      // 3. Tenta inserir dados iniciais SE AINDA NÃO HOUVER DADOS PARA ESTE USUÁRIO
+      const { count: transactionCount } = await supabase
+        .from('transactions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+        
+      if (transactionCount === 0) {
+          await seedDatabaseIfEmpty();
+          // Recarregar após o seeding
+          await Promise.all([
+            loadTransactions(),
+            loadCategories(),
+            loadClients()
+          ]);
+      }
+      
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       showError('Erro ao carregar dados. Tente novamente.');
     } finally {
       setLoading(false);
     }
-  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty]);
+  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty, userId, showSuccess]);
 
   useEffect(() => {
     loadInitialData();
