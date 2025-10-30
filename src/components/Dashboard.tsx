@@ -7,6 +7,8 @@ import DashboardCharts from './DashboardCharts';
 import CategoryCharts from './CategoryCharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 interface DashboardProps {
   workspace: 'PF' | 'PJ';
@@ -20,6 +22,7 @@ interface DashboardProps {
   };
   loading?: boolean;
   onRefreshData?: () => void;
+  onNewTransaction: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -29,7 +32,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onPeriodChange,
   periodFilter,
   loading = false,
-  onRefreshData
+  onRefreshData,
+  onNewTransaction
 }) => {
   const handlePeriodChange = useCallback((period: PeriodType, startDate?: Date, endDate?: Date) => {
     onPeriodChange(period, startDate, endDate);
@@ -67,12 +71,18 @@ const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
         
-        <PeriodFilter
-          selectedPeriod={periodFilter.type}
-          customStartDate={periodFilter.startDate}
-          customEndDate={periodFilter.endDate}
-          onPeriodChange={handlePeriodChange}
-        />
+        <div className="flex items-center space-x-3">
+          <PeriodFilter
+            selectedPeriod={periodFilter.type}
+            customStartDate={periodFilter.startDate}
+            customEndDate={periodFilter.endDate}
+            onPeriodChange={handlePeriodChange}
+          />
+          <Button onClick={onNewTransaction} className="hidden lg:flex">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Transação
+          </Button>
+        </div>
       </div>
 
       {/* Métricas Principais (4 Colunas) */}

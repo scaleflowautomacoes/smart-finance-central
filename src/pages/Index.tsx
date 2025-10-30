@@ -169,7 +169,7 @@ const Index = () => {
     <Layout
       currentWorkspace={currentWorkspace}
       onWorkspaceChange={setCurrentWorkspace}
-      onNewTransaction={() => setShowForm(true)}
+      onNewTransaction={handleNewTransaction}
     >
       <div className="space-y-4 lg:space-y-8">
         <Dashboard 
@@ -180,6 +180,7 @@ const Index = () => {
           periodFilter={periodFilter}
           loading={loading}
           onRefreshData={refreshData}
+          onNewTransaction={handleNewTransaction}
         />
         
         <TransactionTable
