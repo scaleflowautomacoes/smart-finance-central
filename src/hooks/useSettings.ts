@@ -20,7 +20,10 @@ export const useSettings = () => {
         .eq('user_id', userId)
         .order('nome');
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Erro ao carregar categorias (continuando):', error);
+        return [];
+      }
 
       const typedCategories = (data || []).map(item => ({
         ...item,
@@ -28,14 +31,10 @@ export const useSettings = () => {
         tipo: item.tipo as 'entrada' | 'saida'
       }));
 
-      setCategories(typedCategories);
+      return typedCategories;
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar categorias",
-        variant: "destructive",
-      });
+      return [];
     }
   };
 
@@ -47,23 +46,39 @@ export const useSettings = () => {
         .eq('user_id', userId)
         .order('nome');
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Erro ao carregar responsáveis (continuando):', error);
+        return [];
+      }
 
       const typedResponsaveis = (data || []).map(item => ({
         ...item,
         tipo: item.tipo as 'recorrente' | 'avulso'
       }));
 
-      setResponsaveis(typedResponsaveis);
+      return typedResponsaveis;
     } catch (error) {
       console.error('Erro ao carregar responsáveis:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar responsáveis",
-        variant: "destructive",
-      });
+      return [];
     }
   };
+  
+  const loadInitialData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [categoriesData, responsaveisData] = await Promise.all([
+        loadCategories(),
+        loadResponsaveis()
+      ]);
+      
+      setCategories(categoriesData);
+      setResponsaveis(responsaveisData);
+    } catch (e) {
+      console.error("Erro no carregamento inicial de settings:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
     setActionLoading(true);
@@ -94,7 +109,7 @@ export const useSettings = () => {
         description: "Categoria adicionada com sucesso!",
       });
       
-      await loadCategories();
+      await loadInitialData();
     } catch (error) {
       console.error('Erro ao adicionar categoria:', error);
       toast({
@@ -205,7 +220,7 @@ export const useSettings = () => {
         description: "Responsável adicionado com sucesso!",
       });
       
-      await loadResponsaveis();
+      await loadInitialData();
     } catch (error) {
       console.error('Erro ao adicionar responsável:', error);
       toast({
@@ -287,21 +302,13 @@ export const useSettings = () => {
     }
   };
 
-  const refreshData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        loadCategories(),
-        loadResponsaveis()
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const refreshData = useCallback(async () => {
+    await loadInitialData();
+  }, [loadInitialData]);
 
   useEffect(() => {
-    refreshData();
-  }, []);
+    loadInitialData();
+  }, [loadInitialData]);
 
   return {
     categories,

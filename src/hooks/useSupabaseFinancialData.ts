@@ -190,7 +190,9 @@ export const useSupabaseFinancialData = () => {
       setTransactions(convertedTransactions);
     } catch (error) {
       showError('Erro ao carregar transações');
-      throw error;
+      // Não lançar erro aqui para não quebrar o Promise.all
+      console.error('Falha crítica ao carregar transações:', error);
+      setTransactions([]);
     }
   }, [showError, userId]);
 
@@ -203,17 +205,18 @@ export const useSupabaseFinancialData = () => {
         .order('nome');
 
       if (error) {
-        setCategories([]);
-        return;
+        // Logar o erro 400, mas não lançar para não quebrar o Promise.all
+        console.warn('Categorias não carregadas (continuando sem elas):', error.message);
+        return [];
       }
 
       const convertedCategories = (data || []).map(convertToCategory);
-      setCategories(convertedCategories);
+      return convertedCategories;
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-      setCategories([]);
+      return [];
     }
-  }, [showError, userId]);
+  }, [userId]);
 
   const loadClients = useCallback(async () => {
     try {
@@ -225,17 +228,17 @@ export const useSupabaseFinancialData = () => {
         .order('nome');
 
       if (error) {
-        setClients([]);
-        return;
+        console.warn('Responsáveis não carregados (continuando sem eles):', error.message);
+        return [];
       }
 
       const convertedClients = (data || []).map(convertToClient);
-      setClients(convertedClients);
+      return convertedClients;
     } catch (error) {
       console.error('Erro ao carregar responsáveis:', error);
-      setClients([]);
+      return [];
     }
-  }, [showError, userId]);
+  }, [userId]);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -243,7 +246,6 @@ export const useSupabaseFinancialData = () => {
       
       // 1. Reivindicar transações sem user_id para o mock user (restaura dados antigos)
       console.log('Reivindicando transações sem user_id...');
-      // NOTE: We rely on the RPC function 'claim_unowned_transactions' being available
       const { data: claimedCount, error: claimError } = await supabase.rpc('claim_unowned_transactions');
       
       if (claimError) {
@@ -257,11 +259,20 @@ export const useSupabaseFinancialData = () => {
       await seedDatabaseIfEmpty();
       
       // 3. Carrega todos os dados (agora incluindo os reivindicados ou os mockados)
-      await Promise.all([
+      const [
+        transactionsData,
+        categoriesData,
+        clientsData
+      ] = await Promise.all([
         loadTransactions(),
         loadCategories(),
         loadClients()
       ]);
+      
+      // Atualiza estados apenas se os dados foram carregados com sucesso
+      if (transactionsData) setTransactions(transactionsData);
+      if (categoriesData) setCategories(categoriesData);
+      if (clientsData) setClients(clientsData);
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
