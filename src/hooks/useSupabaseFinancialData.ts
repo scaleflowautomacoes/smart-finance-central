@@ -1,9 +1,36 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Category, Client, DashboardMetrics } from '@/types/financial';
-import { isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { isWithinInterval, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { useToastNotifications } from './useToastNotifications';
 import { useMockUserId } from './useMockUserId'; // Importando o mock user ID
+
+// --- SEED DATA (Dados Iniciais) ---
+const SEED_TRANSACTIONS: Omit<Transaction, 'id' | 'deletado' | 'user_id' | 'created_at' | 'updated_at'>[] = [
+  // PF - Entradas
+  { nome: 'Salário Mensal', tipo: 'entrada', valor: 5000.00, data: new Date().toISOString().split('T')[0], origem: 'PF', forma_pagamento: 'pix', status: 'realizada', recorrencia: 'Fee Mensal', is_recorrente: true, recorrencia_tipo: 'mensal', recorrencia_total_ocorrencias: 12, recorrencia_ocorrencia_atual: 1, recorrencia_ativa: true },
+  { nome: 'Freelance Projeto X', tipo: 'entrada', valor: 1500.00, data: subMonths(new Date(), 1).toISOString().split('T')[0], origem: 'PF', forma_pagamento: 'pix', status: 'realizada', recorrencia: 'Avulso' },
+  // PF - Saídas
+  { nome: 'Aluguel', tipo: 'saida', valor: 1200.00, data: new Date().toISOString().split('T')[0], origem: 'PF', forma_pagamento: 'boleto', status: 'realizada', recorrencia: 'Fee Mensal', is_recorrente: true, recorrencia_tipo: 'mensal', recorrencia_total_ocorrencias: 12, recorrencia_ocorrencia_atual: 1, recorrencia_ativa: true },
+  { nome: 'Supermercado', tipo: 'saida', valor: 450.00, data: new Date().toISOString().split('T')[0], origem: 'PF', forma_pagamento: 'cartao', status: 'realizada', recorrencia: 'Avulso' },
+  { nome: 'Conta de Luz', tipo: 'saida', valor: 150.00, data: endOfMonth(new Date()).toISOString().split('T')[0], origem: 'PF', forma_pagamento: 'pix', status: 'prevista', recorrencia: 'Fee Mensal' },
+  
+  // PJ - Entradas
+  { nome: 'Venda de Serviço A', tipo: 'entrada', valor: 8000.00, data: new Date().toISOString().split('T')[0], origem: 'PJ', forma_pagamento: 'pix', status: 'realizada', recorrencia: 'Setup' },
+  { nome: 'Fee Mensal Cliente Y', tipo: 'entrada', valor: 3000.00, data: endOfMonth(new Date()).toISOString().split('T')[0], origem: 'PJ', forma_pagamento: 'boleto', status: 'prevista', recorrencia: 'Fee Mensal', is_recorrente: true, recorrencia_tipo: 'mensal', recorrencia_total_ocorrencias: 6, recorrencia_ocorrencia_atual: 1, recorrencia_ativa: true },
+  // PJ - Saídas
+  { nome: 'Aluguel Escritório', tipo: 'saida', valor: 2500.00, data: new Date().toISOString().split('T')[0], origem: 'PJ', forma_pagamento: 'pix', status: 'realizada', recorrencia: 'Fee Mensal' },
+  { nome: 'Marketing Digital', tipo: 'saida', valor: 1000.00, data: endOfMonth(new Date()).toISOString().split('T')[0], origem: 'PJ', forma_pagamento: 'cartao', status: 'prevista', recorrencia: 'Avulso' },
+];
+
+const SEED_CATEGORIES: Omit<Category, 'id' | 'user_id' | 'created_at'>[] = [
+  { nome: 'Salário', origem: 'PF', tipo: 'entrada' },
+  { nome: 'Aluguel', origem: 'PF', tipo: 'saida', limite_mensal: 1500 },
+  { nome: 'Alimentação', origem: 'PF', tipo: 'saida', limite_mensal: 800 },
+  { nome: 'Vendas', origem: 'PJ', tipo: 'entrada' },
+  { nome: 'Custos Fixos', origem: 'PJ', tipo: 'saida' },
+  { nome: 'Marketing', origem: 'PJ', tipo: 'saida' },
+];
 
 // Helper functions para converter dados do Supabase para nossos tipos
 const convertToTransaction = (data: any): Transaction => {
@@ -61,6 +88,87 @@ export const useSupabaseFinancialData = () => {
   
   const { showSuccess, showError } = useToastNotifications();
   const userId = useMockUserId(); // Obtendo o user ID mockado
+
+  const seedDatabaseIfEmpty = useCallback(async () => {
+    try {
+      // 1. Verificar se há transações
+      const { count: transactionCount, error: countError } = await supabase
+        .from('transactions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if (countError) throw countError;
+
+      if (transactionCount === 0) {
+        console.log('Database vazio. Inserindo dados iniciais...');
+        
+        // 2. Inserir Categorias
+        const categoriesToInsert = SEED_CATEGORIES.map(c => ({ ...c, user_id: userId }));
+        const { data: insertedCategories, error: catError } = await supabase
+          .from('categories')
+          .insert(categoriesToInsert)
+          .select();
+          
+        if (catError) throw catError;
+        
+        // Mapear IDs das categorias inseridas
+        const categoryIdMap: { [key: string]: string } = {};
+        insertedCategories.forEach(c => {
+            const seedCategory = SEED_CATEGORIES.find(sc => sc.nome === c.nome && sc.origem === c.origem);
+            if (seedCategory) {
+                categoryIdMap[seedCategory.nome] = c.id;
+            }
+        });
+
+        // 3. Inserir Transações
+        const transactionsToInsert = SEED_TRANSACTIONS.map(t => {
+            const categoryName = SEED_CATEGORIES.find(c => c.nome === t.nome)?.nome || 
+                                 (t.nome.includes('Salário') ? 'Salário' : 
+                                  t.nome.includes('Aluguel') ? 'Aluguel' : 
+                                  t.nome.includes('Supermercado') ? 'Alimentação' : 
+                                  t.nome.includes('Venda') ? 'Vendas' : 
+                                  t.nome.includes('Fee Mensal') ? 'Vendas' : 
+                                  t.nome.includes('Marketing') ? 'Marketing' : 
+                                  '');
+            
+            const categoryId = categoryIdMap[categoryName];
+            
+            return {
+                ...t,
+                user_id: userId,
+                categoria_id: categoryId || null,
+                // Garantir que campos opcionais vazios sejam null
+                cliente_id: t.cliente_id || null,
+                subcategoria_id: t.subcategoria_id || null,
+                dependencia: t.dependencia || null,
+                recorrencia: t.recorrencia || null,
+                observacoes: t.observacoes || null,
+                recorrencia_tipo: t.recorrencia_tipo || null,
+                recorrencia_total_ocorrencias: t.recorrencia_total_ocorrencias || null,
+                recorrencia_ocorrencia_atual: t.recorrencia_ocorrencia_atual || null,
+                recorrencia_transacao_pai_id: t.recorrencia_transacao_pai_id || null,
+                recorrencia_proxima_data: t.recorrencia_proxima_data || null,
+            };
+        });
+        
+        const { error: transError } = await supabase
+          .from('transactions')
+          .insert(transactionsToInsert);
+
+        if (transError) throw transError;
+        
+        console.log('Dados iniciais inseridos com sucesso.');
+        showSuccess('Dados iniciais carregados! Por favor, clique em Refresh para ver as recorrências geradas.');
+        
+        // Tentar gerar recorrências imediatamente
+        await supabase.rpc('gerar_proximas_transacoes_recorrentes');
+      }
+    } catch (error) {
+      console.error('Erro ao inserir dados iniciais:', error);
+      showError('Erro ao inicializar dados de exemplo.');
+    }
+  }, [showError, userId]);
+
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -127,6 +235,11 @@ export const useSupabaseFinancialData = () => {
   const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // 1. Tenta inserir dados iniciais se o banco estiver vazio
+      await seedDatabaseIfEmpty();
+      
+      // 2. Carrega todos os dados
       await Promise.all([
         loadTransactions(),
         loadCategories(),
@@ -138,7 +251,7 @@ export const useSupabaseFinancialData = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError, loadTransactions, loadCategories, loadClients]);
+  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty]);
 
   useEffect(() => {
     loadInitialData();
@@ -218,7 +331,6 @@ export const useSupabaseFinancialData = () => {
         recorrencia_total_ocorrencias: transaction.recorrencia_total_ocorrencias || null,
         recorrencia_ocorrencia_atual: transaction.recorrencia_ocorrencia_atual || null,
         recorrencia_transacao_pai_id: transaction.recorrencia_transacao_pai_id || null,
-        recorrencia_proxima_data: transaction.recorrencia_proxima_data || null,
         recorrencia_ativa: transaction.recorrencia_ativa !== false ? true : false,
         deletado: false,
         user_id: userId // Adicionando o user_id
@@ -253,7 +365,7 @@ export const useSupabaseFinancialData = () => {
           showSuccess('Transação criada com sucesso!');
         }
       } else {
-        showSuccess('Transação adicionada com sucesso!');
+        showSuccess('Transação criada com sucesso!');
       }
     } catch (error) {
       console.error('Erro ao adicionar transação:', error);
