@@ -3,7 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Category, Responsavel, TablesInsert, TablesUpdate } from "@/types/financial";
 import { useToast } from "@/hooks/use-toast";
 import { useMockUserId } from "./useMockUserId";
-import { fetchCategories, fetchClients, createCategory } from "@/data/financial"; // Importando funções de acesso a dados
+import { createCategory } from "@/data/financial"; // Importando funções de acesso a dados
+import { fetchCategories, fetchClients } from "./useAuxiliaryData"; // Importando funções de carregamento sem filtro user_id
+
+// Converters (necessários para tipagem correta)
+const convertToCategory = (data: any): Category => ({
+  id: data.id,
+  nome: data.nome,
+  origem: data.origem as 'PF' | 'PJ',
+  tipo: data.tipo as 'entrada' | 'saida',
+  limite_mensal: data.limite_mensal ? parseFloat(data.limite_mensal) : undefined,
+});
+
+const convertToResponsavel = (data: any): Responsavel => ({
+  id: data.id,
+  nome: data.nome,
+  tipo: data.tipo as 'recorrente' | 'avulso',
+  ativo: data.ativo
+});
+
 
 export const useSettings = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -16,13 +34,21 @@ export const useSettings = () => {
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
-      const [categoriesData, responsaveisData] = await Promise.all([
-        fetchCategories(),
-        fetchClients()
-      ]);
+      // Carregamento sem filtro user_id (Contorno RLS)
+      const { data: catData } = await supabase
+        .from('categories')
+        .select('*')
+        .order('nome');
+        
+      const { data: respData } = await supabase
+        .from('responsaveis')
+        .select('*')
+        .eq('ativo', true)
+        .order('nome');
       
-      setCategories(categoriesData);
-      setResponsaveis(responsaveisData);
+      setCategories((catData || []).map(convertToCategory));
+      setResponsaveis((respData || []).map(convertToResponsavel));
+      
     } catch (e) {
       console.error("Erro no carregamento inicial de settings:", e);
     } finally {
@@ -69,11 +95,7 @@ export const useSettings = () => {
 
       if (error) throw error;
 
-      const typedData = {
-        ...data,
-        origem: data.origem as 'PF' | 'PJ',
-        tipo: data.tipo as 'entrada' | 'saida'
-      } as Category;
+      const typedData = convertToCategory(data);
 
       setCategories(prev => prev.map(cat => cat.id === id ? typedData : cat));
       
@@ -140,10 +162,7 @@ export const useSettings = () => {
 
       if (error) throw error;
 
-      const typedData = {
-        ...data,
-        tipo: data.tipo as 'recorrente' | 'avulso'
-      } as Responsavel;
+      const typedData = convertToResponsavel(data);
 
       setResponsaveis(prev => [...prev, typedData]);
       
@@ -180,10 +199,7 @@ export const useSettings = () => {
 
       if (error) throw error;
 
-      const typedData = {
-        ...data,
-        tipo: data.tipo as 'recorrente' | 'avulso'
-      } as Responsavel;
+      const typedData = convertToResponsavel(data);
 
       setResponsaveis(prev => prev.map(resp => resp.id === id ? typedData : resp));
       

@@ -42,13 +42,6 @@ const convertToCategory = (data: any): Category => ({
   limite_mensal: data.limite_mensal ? parseFloat(data.limite_mensal) : undefined,
 });
 
-const convertToClient = (data: any): Client => ({
-  id: data.id,
-  nome: data.nome,
-  tipo: data.tipo as 'recorrente' | 'avulso',
-  ativo: data.ativo
-});
-
 // --- Data Access Functions ---
 
 export async function fetchTransactions(): Promise<Transaction[]> {
@@ -63,28 +56,7 @@ export async function fetchTransactions(): Promise<Transaction[]> {
   return (data || []).map(convertToTransaction);
 }
 
-export async function fetchCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('user_id', userId)
-    .order('nome');
-
-  if (error) throw error;
-  return (data || []).map(convertToCategory);
-}
-
-export async function fetchClients(): Promise<Client[]> {
-  const { data, error } = await supabase
-    .from('responsaveis')
-    .select('*')
-    .eq('ativo', true)
-    .eq('user_id', userId)
-    .order('nome');
-
-  if (error) throw error;
-  return (data || []).map(convertToClient);
-}
+// REMOVIDO: fetchCategories e fetchClients (agora em useAuxiliaryData)
 
 export async function createTransaction(transaction: Omit<Transaction, 'id' | 'deletado'>): Promise<Transaction> {
   const insertData: TablesInsert<'transactions'> = {
