@@ -91,78 +91,83 @@ export const useSupabaseFinancialData = () => {
 
   const seedDatabaseIfEmpty = useCallback(async () => {
     try {
-      // 1. Verificar se há transações para o usuário mockado
-      const { count: transactionCount, error: countError } = await supabase
+      // 1. Verificar se há transações na tabela INTEIRA (sem filtro de user_id)
+      const { count: totalTransactionCount, error: countError } = await supabase
         .from('transactions')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId);
+        .select('id', { count: 'exact', head: true });
 
       if (countError) throw countError;
 
-      if (transactionCount === 0) {
-        console.log('Database vazio para o usuário. Inserindo dados iniciais...');
-        
-        // 2. Inserir Categorias
-        const categoriesToInsert = SEED_CATEGORIES.map(c => ({ ...c, user_id: userId }));
-        const { data: insertedCategories, error: catError } = await supabase
-          .from('categories')
-          .insert(categoriesToInsert)
-          .select();
-          
-        if (catError) throw catError;
-        
-        // Mapear IDs das categorias inseridas
-        const categoryIdMap: { [key: string]: string } = {};
-        insertedCategories.forEach(c => {
-            const seedCategory = SEED_CATEGORIES.find(sc => sc.nome === c.nome && sc.origem === c.origem);
-            if (seedCategory) {
-                categoryIdMap[seedCategory.nome] = c.id;
-            }
-        });
-
-        // 3. Inserir Transações
-        const transactionsToInsert = SEED_TRANSACTIONS.map(t => {
-            const categoryName = SEED_CATEGORIES.find(c => c.nome === t.nome)?.nome || 
-                                 (t.nome.includes('Salário') ? 'Salário' : 
-                                  t.nome.includes('Aluguel') ? 'Aluguel' : 
-                                  t.nome.includes('Supermercado') ? 'Alimentação' : 
-                                  t.nome.includes('Venda') ? 'Vendas' : 
-                                  t.nome.includes('Fee Mensal') ? 'Vendas' : 
-                                  t.nome.includes('Marketing') ? 'Marketing' : 
-                                  '');
-            
-            const categoryId = categoryIdMap[categoryName];
-            
-            return {
-                ...t,
-                user_id: userId,
-                categoria_id: categoryId || null,
-                // Garantir que campos opcionais vazios sejam null
-                cliente_id: t.cliente_id || null,
-                subcategoria_id: t.subcategoria_id || null,
-                dependencia: t.dependencia || null,
-                recorrencia: t.recorrencia || null,
-                observacoes: t.observacoes || null,
-                recorrencia_tipo: t.recorrencia_tipo || null,
-                recorrencia_total_ocorrencias: t.recorrencia_total_ocorrencias || null,
-                recorrencia_ocorrencia_atual: t.recorrencia_ocorrencia_atual || null,
-                recorrencia_transacao_pai_id: t.recorrencia_transacao_pai_id || null,
-                recorrencia_proxima_data: t.recorrencia_proxima_data || null,
-            };
-        });
-        
-        const { error: transError } = await supabase
-          .from('transactions')
-          .insert(transactionsToInsert);
-
-        if (transError) throw transError;
-        
-        console.log('Dados iniciais inseridos com sucesso.');
-        showSuccess('Dados iniciais carregados! Por favor, clique em Refresh para ver as recorrências geradas.');
-        
-        // Tentar gerar recorrências imediatamente
-        await supabase.rpc('gerar_proximas_transacoes_recorrentes');
+      // Se houver QUALQUER transação, não inserimos os dados mockados.
+      if (totalTransactionCount && totalTransactionCount > 0) {
+        console.log('Transações existentes detectadas. Pulando inserção de dados iniciais.');
+        return;
       }
+      
+      // Se o banco estiver completamente vazio, inserimos os dados mockados
+      console.log('Database completamente vazio. Inserindo dados iniciais...');
+      
+      // 2. Inserir Categorias
+      const categoriesToInsert = SEED_CATEGORIES.map(c => ({ ...c, user_id: userId }));
+      const { data: insertedCategories, error: catError } = await supabase
+        .from('categories')
+        .insert(categoriesToInsert)
+        .select();
+        
+      if (catError) throw catError;
+      
+      // Mapear IDs das categorias inseridas
+      const categoryIdMap: { [key: string]: string } = {};
+      insertedCategories.forEach(c => {
+          const seedCategory = SEED_CATEGORIES.find(sc => sc.nome === c.nome && sc.origem === c.origem);
+          if (seedCategory) {
+              categoryIdMap[seedCategory.nome] = c.id;
+          }
+      });
+
+      // 3. Inserir Transações
+      const transactionsToInsert = SEED_TRANSACTIONS.map(t => {
+          const categoryName = SEED_CATEGORIES.find(c => c.nome === t.nome)?.nome || 
+                               (t.nome.includes('Salário') ? 'Salário' : 
+                                t.nome.includes('Aluguel') ? 'Aluguel' : 
+                                t.nome.includes('Supermercado') ? 'Alimentação' : 
+                                t.nome.includes('Venda') ? 'Vendas' : 
+                                t.nome.includes('Fee Mensal') ? 'Vendas' : 
+                                t.nome.includes('Marketing') ? 'Marketing' : 
+                                '');
+          
+          const categoryId = categoryIdMap[categoryName];
+          
+          return {
+              ...t,
+              user_id: userId,
+              categoria_id: categoryId || null,
+              // Garantir que campos opcionais vazios sejam null
+              cliente_id: t.cliente_id || null,
+              subcategoria_id: t.subcategoria_id || null,
+              dependencia: t.dependencia || null,
+              recorrencia: t.recorrencia || null,
+              observacoes: t.observacoes || null,
+              recorrencia_tipo: t.recorrencia_tipo || null,
+              recorrencia_total_ocorrencias: t.recorrencia_total_ocorrencias || null,
+              recorrencia_ocorrencia_atual: t.recorrencia_ocorrencia_atual || null,
+              recorrencia_transacao_pai_id: t.recorrencia_transacao_pai_id || null,
+              recorrencia_proxima_data: t.recorrencia_proxima_data || null,
+          };
+      });
+      
+      const { error: transError } = await supabase
+        .from('transactions')
+        .insert(transactionsToInsert);
+
+      if (transError) throw transError;
+      
+      console.log('Dados iniciais inseridos com sucesso.');
+      showSuccess('Dados iniciais carregados! Por favor, clique em Refresh para ver as recorrências geradas.');
+      
+      // Tentar gerar recorrências imediatamente
+      await supabase.rpc('gerar_proximas_transacoes_recorrentes');
+      
     } catch (error) {
       console.error('Erro ao inserir dados iniciais:', error);
       showError('Erro ao inicializar dados de exemplo.');
@@ -236,40 +241,26 @@ export const useSupabaseFinancialData = () => {
     try {
       setLoading(true);
       
-      // 1. Reivindicar transações sem user_id para o mock user
+      // 1. Reivindicar transações sem user_id para o mock user (restaura dados antigos)
       console.log('Reivindicando transações sem user_id...');
       const { data: claimedCount, error: claimError } = await supabase.rpc('claim_unowned_transactions');
       
       if (claimError) {
         console.warn('Erro ao reivindicar transações:', claimError);
-        // Continuar mesmo com erro, pois o problema pode ser a RLS ou a função não existir
-      } else if (claimedCount > 0) {
+      } else if (claimedCount && claimedCount > 0) {
         console.log(`${claimedCount} transações reivindicadas.`);
         showSuccess(`${claimedCount} transações antigas foram restauradas!`);
       }
       
-      // 2. Carrega todos os dados (agora incluindo os reivindicados)
+      // 2. Tenta inserir dados iniciais SE O BANCO ESTIVER VAZIO
+      await seedDatabaseIfEmpty();
+      
+      // 3. Carrega todos os dados (agora incluindo os reivindicados ou os mockados)
       await Promise.all([
         loadTransactions(),
         loadCategories(),
         loadClients()
       ]);
-      
-      // 3. Tenta inserir dados iniciais SE AINDA NÃO HOUVER DADOS PARA ESTE USUÁRIO
-      const { count: transactionCount } = await supabase
-        .from('transactions')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId);
-        
-      if (transactionCount === 0) {
-          await seedDatabaseIfEmpty();
-          // Recarregar após o seeding
-          await Promise.all([
-            loadTransactions(),
-            loadCategories(),
-            loadClients()
-          ]);
-      }
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -277,7 +268,7 @@ export const useSupabaseFinancialData = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty, userId, showSuccess]);
+  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty, showSuccess]);
 
   useEffect(() => {
     loadInitialData();
