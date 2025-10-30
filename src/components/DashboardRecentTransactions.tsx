@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Transaction, Category } from '@/types/financial';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowRight, DollarSign, Home, ShoppingCart, TrendingUp, Car, FolderOpen } from 'lucide-react';
+import { ArrowRight, DollarSign, Home, ShoppingCart, TrendingUp, Car, FolderOpen, Folder, FolderDot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 
@@ -23,7 +23,7 @@ const getIconForCategory = (categoryName: string) => {
   if (lowerName.includes('alimentação') || lowerName.includes('mercado')) return ShoppingCart;
   if (lowerName.includes('investimento') || lowerName.includes('rendimento')) return DollarSign;
   if (lowerName.includes('transporte') || lowerName.includes('combustível')) return Car;
-  return FolderOpen;
+  return FolderDot; // Ícone mais genérico para categoria
 };
 
 const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsProps> = ({ 
@@ -66,8 +66,9 @@ const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsProps> = 
               return (
                 <div key={t.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center space-x-4">
+                    {/* Ícone baseado no tipo de transação (Entrada/Saída) */}
                     <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                      <Icon className="h-5 w-5" />
+                      <Folder className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{t.nome}</p>
@@ -78,12 +79,14 @@ const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsProps> = 
                   </div>
                   
                   <div className="flex flex-col items-end space-y-1">
+                    {/* Badge da Categoria */}
                     <Badge 
                       variant={isIncome ? 'default' : 'destructive'} 
                       className={`text-xs px-2 py-0.5 ${isIncome ? 'bg-green-500 hover:bg-green-500' : 'bg-red-500 hover:bg-red-500'}`}
                     >
                       {categoryName}
                     </Badge>
+                    {/* Valor */}
                     <span className={`font-bold text-base ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
                       {isIncome ? '+' : '-'} {formatCurrency(t.valor)}
                     </span>
