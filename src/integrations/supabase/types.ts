@@ -22,6 +22,7 @@ export type Database = {
           nome: string
           origem: string
           tipo: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -30,6 +31,7 @@ export type Database = {
           nome: string
           origem: string
           tipo: string
+          user_id?: string
         }
         Update: {
           created_at?: string | null
@@ -38,30 +40,34 @@ export type Database = {
           nome?: string
           origem?: string
           tipo?: string
+          user_id?: string
         }
         Relationships: []
       }
       responsaveis: {
         Row: {
-          ativo: boolean
+          ativo: boolean | null
           created_at: string | null
           id: string
           nome: string
           tipo: string
+          user_id: string
         }
         Insert: {
-          ativo?: boolean
+          ativo?: boolean | null
           created_at?: string | null
           id?: string
           nome: string
           tipo: string
+          user_id?: string
         }
         Update: {
-          ativo?: boolean
+          ativo?: boolean | null
           created_at?: string | null
           id?: string
           nome?: string
           tipo?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -71,7 +77,7 @@ export type Database = {
           cliente_id: string | null
           created_at: string | null
           data: string
-          deletado: boolean
+          deletado: boolean | null
           dependencia: string | null
           forma_pagamento: string
           id: string
@@ -98,7 +104,7 @@ export type Database = {
           cliente_id?: string | null
           created_at?: string | null
           data: string
-          deletado?: boolean
+          deletado?: boolean | null
           dependencia?: string | null
           forma_pagamento: string
           id?: string
@@ -125,7 +131,7 @@ export type Database = {
           cliente_id?: string | null
           created_at?: string | null
           data?: string
-          deletado?: boolean
+          deletado?: boolean | null
           dependencia?: string | null
           forma_pagamento?: string
           id?: string
@@ -156,6 +162,233 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      debts: {
+        Row: {
+          created_at: string | null
+          creditor: string
+          due_date: string
+          id: string
+          installments_paid: number
+          installments_total: number
+          interest_rate: number
+          name: string
+          payment_day: number
+          remaining_amount: number
+          status: string
+          total_amount: number
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          created_at?: string | null
+          creditor: string
+          due_date: string
+          id?: string
+          installments_paid?: number
+          installments_total: number
+          interest_rate: number
+          name: string
+          payment_day: number
+          remaining_amount?: number
+          status: string
+          total_amount: number
+          user_id?: string
+          workspace: string
+        }
+        Update: {
+          created_at?: string | null
+          creditor?: string
+          due_date?: string
+          id?: string
+          installments_paid?: number
+          installments_total?: number
+          interest_rate?: number
+          name?: string
+          payment_day?: number
+          remaining_amount?: number
+          status?: string
+          total_amount?: number
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          current_amount: number
+          deadline: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          target_amount: number
+          type: string
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          current_amount?: number
+          deadline: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          target_amount: number
+          type: string
+          user_id?: string
+          workspace: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          current_amount?: number
+          deadline?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          target_amount?: number
+          type?: string
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          brand: string | null
+          created_at: string | null
+          current_km: number
+          id: string
+          model: string | null
+          name: string
+          plate: string | null
+          user_id: string
+          workspace: string
+          year: number | null
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string | null
+          current_km: number
+          id?: string
+          model?: string | null
+          name: string
+          plate?: string | null
+          user_id?: string
+          workspace: string
+          year?: number | null
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string | null
+          current_km?: number
+          id?: string
+          model?: string | null
+          name?: string
+          plate?: string | null
+          user_id?: string
+          workspace?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      maintenances: {
+        Row: {
+          cost: number
+          created_at: string | null
+          date_performed: string
+          description: string | null
+          id: string
+          km_performed: number
+          next_date: string | null
+          next_km: number | null
+          type: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string | null
+          date_performed: string
+          description?: string | null
+          id?: string
+          km_performed: number
+          next_date?: string | null
+          next_km?: number | null
+          type: string
+          user_id?: string
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string | null
+          date_performed?: string
+          description?: string | null
+          id?: string
+          km_performed?: number
+          next_date?: string | null
+          next_km?: number | null
+          type?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenances_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investments: {
+        Row: {
+          created_at: string | null
+          current_amount: number
+          expected_return: number | null
+          id: string
+          initial_amount: number
+          name: string
+          purchase_date: string
+          status: string
+          type: string
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_amount?: number
+          expected_return?: number | null
+          id?: string
+          initial_amount: number
+          name: string
+          purchase_date: string
+          status?: string
+          type: string
+          user_id?: string
+          workspace: string
+        }
+        Update: {
+          created_at?: string | null
+          current_amount?: number
+          expected_return?: number | null
+          id?: string
+          initial_amount?: number
+          name?: string
+          purchase_date?: string
+          status?: string
+          type?: string
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
       }
     }
     Views: {
