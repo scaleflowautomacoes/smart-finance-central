@@ -10,10 +10,10 @@ export const useTransactions = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const { showSuccess, showError } = useToastNotifications();
 
-  const loadTransactions = useCallback(async (startDate?: Date, endDate?: Date) => {
+  const loadTransactions = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchTransactions(startDate, endDate);
+      const data = await fetchTransactions();
       setTransactions(data);
       return data;
     } catch (error) {

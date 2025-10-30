@@ -81,53 +81,46 @@ export const useSupabaseFinancialData = () => {
   } = useAuxiliaryData();
 
   const [initialSetupComplete, setInitialSetupComplete] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true); // Novo estado para o setup inicial
   
-  // O carregamento geral agora depende do carregamento dos dados E da conclusão do setup inicial
-  const loading = transactionsLoading || auxiliaryLoading || initialLoading;
+  // O carregamento geral depende do carregamento dos dados e da conclusão do setup inicial
+  const loading = transactionsLoading || auxiliaryLoading || !initialSetupComplete;
   const actionLoading = transactionActionLoading || auxiliaryActionLoading;
 
-  const refreshData = useCallback(async (startDate?: Date, endDate?: Date) => {
-    // Passa os filtros de data para loadTransactions
-    await Promise.all([loadTransactions(startDate, endDate), loadAuxiliaryData()]);
-  }, [loadTransactions, loadAuxiliaryData]);
+  const initialSetup = useCallback(async () => {
+    try {
+      console.log('Iniciando setup inicial (Claiming/Recurrences)...');
+      
+      // 1. Reivindicar transações sem user_id para o mock user
+      const claimedCount = await claimUnownedTransactions();
+      if (claimedCount > 0) {
+        console.log(`${claimedCount} transações reivindicadas.`);
+        showSuccess(`${claimedCount} transações antigas foram restauradas!`);
+      }
+      
+      // 2. Garantir que as recorrências sejam geradas
+      await generateRecurrences();
+      
+      // 3. Recarregar todos os dados após o setup (Isso garante que o estado seja atualizado)
+      await Promise.all([loadTransactions(), loadAuxiliaryData()]);
+      
+    } catch (error) {
+      console.error('Erro durante o setup inicial:', error);
+    } finally {
+      // Marca o setup como completo, independentemente de erros
+      setInitialSetupComplete(true);
+      console.log('Setup inicial concluído.');
+    }
+  }, [loadTransactions, loadAuxiliaryData, showSuccess]);
 
   useEffect(() => {
-    const initialize = async () => {
-      setInitialLoading(true);
-      try {
-        console.log('Iniciando setup inicial (Claiming/Recurrences)...');
-        
-        // 1. Reivindicar transações sem user_id para o mock user
-        const claimedCount = await claimUnownedTransactions();
-        if (claimedCount > 0) {
-          console.log(`Reivindicadas: ${claimedCount} transações`);
-          showSuccess(`${claimedCount} transações antigas foram restauradas!`);
-        }
-        
-        // 2. Garantir que as recorrências sejam geradas
-        await generateRecurrences();
-        
-        // 3. Recarregar todos os dados após o setup
-        await Promise.allSettled([
-          loadTransactions(), 
-          loadAuxiliaryData()
-        ]);
-        
-        console.log('Inicialização concluída');
-      } catch (error) {
-        console.error('Erro na inicialização:', error);
-      } finally {
-        setInitialLoading(false); // SEMPRE RESOLVE O LOADING INICIAL
-        setInitialSetupComplete(true);
-      }
-    };
-    
     if (!initialSetupComplete) {
-        initialize();
+        initialSetup();
     }
-  }, [initialSetupComplete, loadTransactions, loadAuxiliaryData, showSuccess]);
+  }, [initialSetup, initialSetupComplete]);
 
+  const refreshData = useCallback(async () => {
+    await Promise.all([loadTransactions(), loadAuxiliaryData()]);
+  }, [loadTransactions, loadAuxiliaryData]);
 
   return {
     transactions,
