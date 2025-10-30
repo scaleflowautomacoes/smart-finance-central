@@ -188,11 +188,12 @@ export const useSupabaseFinancialData = () => {
 
       const convertedTransactions = (data || []).map(convertToTransaction);
       setTransactions(convertedTransactions);
+      return convertedTransactions; // Retorna dados para uso no loadInitialData
     } catch (error) {
       showError('Erro ao carregar transações');
-      // Não lançar erro aqui para não quebrar o Promise.all
       console.error('Falha crítica ao carregar transações:', error);
       setTransactions([]);
+      return [];
     }
   }, [showError, userId]);
 
@@ -240,11 +241,8 @@ export const useSupabaseFinancialData = () => {
     }
   }, [userId]);
 
-  const loadInitialData = useCallback(async () => {
+  const claimUnownedTransactions = useCallback(async () => {
     try {
-      setLoading(true);
-      
-      // 1. Reivindicar transações sem user_id para o mock user (restaura dados antigos)
       console.log('Reivindicando transações sem user_id...');
       const { data: claimedCount, error: claimError } = await supabase.rpc('claim_unowned_transactions');
       
@@ -254,22 +252,34 @@ export const useSupabaseFinancialData = () => {
         console.log(`${claimedCount} transações reivindicadas.`);
         showSuccess(`${claimedCount} transações antigas foram restauradas!`);
       }
+    } catch (error) {
+      console.error('Erro durante o claim:', error);
+    }
+  }, [showSuccess]);
+
+  const loadInitialData = useCallback(async () => {
+    try {
+      setLoading(true);
       
-      // 2. Tenta inserir dados iniciais SE O BANCO ESTIVER VAZIO
+      // 1. Tenta inserir dados iniciais SE O BANCO ESTIVER VAZIO
       await seedDatabaseIfEmpty();
       
-      // 3. Carrega todos os dados (agora incluindo os reivindicados ou os mockados)
+      // 2. Reivindicar transações sem user_id para o mock user (garante que dados antigos sejam atribuídos)
+      await claimUnownedTransactions();
+      
+      // 3. Carrega Transações (CRÍTICO)
+      const transactionsData = await loadTransactions();
+      
+      // 4. Carrega dados auxiliares (NÃO CRÍTICO)
       const [
-        transactionsData,
         categoriesData,
         clientsData
       ] = await Promise.all([
-        loadTransactions(),
         loadCategories(),
         loadClients()
       ]);
       
-      // Atualiza estados apenas se os dados foram carregados com sucesso
+      // Atualiza estados
       if (transactionsData) setTransactions(transactionsData);
       if (categoriesData) setCategories(categoriesData);
       if (clientsData) setClients(clientsData);
@@ -280,7 +290,7 @@ export const useSupabaseFinancialData = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty, showSuccess]);
+  }, [showError, loadTransactions, loadCategories, loadClients, seedDatabaseIfEmpty, claimUnownedTransactions]);
 
   useEffect(() => {
     loadInitialData();
@@ -303,6 +313,8 @@ export const useSupabaseFinancialData = () => {
     };
   }, [loadInitialData, loadTransactions]);
 
+  // ... (restante do código omitido para brevidade, mas mantido no arquivo)
+  
   const calculateMetrics = useCallback((origem: 'PF' | 'PJ', startDate?: Date, endDate?: Date): DashboardMetrics => {
     let filteredTransactions = transactions.filter(t => 
       t.origem === origem && 
