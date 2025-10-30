@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DashboardMetrics } from '@/types/financial';
-import { isWithinInterval, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { useToastNotifications } from './useToastNotifications';
-import { useMockUserId } from './useMockUserId';
 import { useTransactions } from './useTransactions';
 import { useAuxiliaryData } from './useAuxiliaryData';
 import { claimUnownedTransactions, generateRecurrences } from '@/data/financial';
@@ -81,13 +80,15 @@ export const useSupabaseFinancialData = () => {
     addCategory 
   } = useAuxiliaryData();
 
-  const [initialLoading, setInitialLoading] = useState(true);
-  const loading = transactionsLoading || auxiliaryLoading || initialLoading;
+  const [initialSetupComplete, setInitialSetupComplete] = useState(false);
+  
+  // O carregamento geral depende do carregamento dos dados e da conclusão do setup inicial
+  const loading = transactionsLoading || auxiliaryLoading || !initialSetupComplete;
   const actionLoading = transactionActionLoading || auxiliaryActionLoading;
 
   const initialSetup = useCallback(async () => {
     try {
-      setInitialLoading(true);
+      console.log('Iniciando setup inicial (Claiming/Recurrences)...');
       
       // 1. Reivindicar transações sem user_id para o mock user
       const claimedCount = await claimUnownedTransactions();
@@ -105,14 +106,17 @@ export const useSupabaseFinancialData = () => {
     } catch (error) {
       console.error('Erro durante o setup inicial:', error);
     } finally {
-      setInitialLoading(false);
+      // Marca o setup como completo, independentemente de erros
+      setInitialSetupComplete(true);
+      console.log('Setup inicial concluído.');
     }
   }, [loadTransactions, loadAuxiliaryData, showSuccess]);
 
   useEffect(() => {
-    // Executa o setup inicial (claim, geração de recorrências)
-    initialSetup();
-  }, [initialSetup]);
+    if (!initialSetupComplete) {
+        initialSetup();
+    }
+  }, [initialSetup, initialSetupComplete]);
 
   const refreshData = useCallback(async () => {
     await Promise.all([loadTransactions(), loadAuxiliaryData()]);

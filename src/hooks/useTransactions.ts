@@ -12,6 +12,7 @@ export const useTransactions = () => {
 
   const loadTransactions = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await fetchTransactions();
       setTransactions(data);
       return data;
@@ -20,6 +21,8 @@ export const useTransactions = () => {
       console.error('Falha crítica ao carregar transações:', error);
       setTransactions([]);
       return [];
+    } finally {
+      setLoading(false); // Garante que o loading seja false
     }
   }, [showError]);
 
