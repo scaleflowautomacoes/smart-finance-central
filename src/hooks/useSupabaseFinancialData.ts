@@ -172,7 +172,7 @@ export const useSupabaseFinancialData = () => {
       console.error('Erro ao inserir dados iniciais:', error);
       showError('Erro ao inicializar dados de exemplo.');
     }
-  }, [showError, userId]);
+  }, [showError, userId, showSuccess]);
 
 
   const loadTransactions = useCallback(async () => {
@@ -243,6 +243,7 @@ export const useSupabaseFinancialData = () => {
       
       // 1. Reivindicar transações sem user_id para o mock user (restaura dados antigos)
       console.log('Reivindicando transações sem user_id...');
+      // NOTE: We rely on the RPC function 'claim_unowned_transactions' being available
       const { data: claimedCount, error: claimError } = await supabase.rpc('claim_unowned_transactions');
       
       if (claimError) {
@@ -272,7 +273,24 @@ export const useSupabaseFinancialData = () => {
 
   useEffect(() => {
     loadInitialData();
-  }, [loadInitialData]);
+    
+    // FASE 6: Implementar Atualização em Tempo Real
+    const channel = supabase
+      .channel('transactions-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        () => {
+          console.log('Realtime update received. Reloading transactions...');
+          loadTransactions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadInitialData, loadTransactions]);
 
   const calculateMetrics = useCallback((origem: 'PF' | 'PJ', startDate?: Date, endDate?: Date): DashboardMetrics => {
     let filteredTransactions = transactions.filter(t => 

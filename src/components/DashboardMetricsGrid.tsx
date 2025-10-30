@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, DollarSign, Percent, Info, CheckCircle } from
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { formatCurrency } from '@/utils/chartColors';
 import { Badge } from '@/components/ui/badge';
+import { Transaction } from '@/types/financial'; // Adicionado
 
 interface DashboardMetricsGridProps {
   transactions: Transaction[];

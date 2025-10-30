@@ -5,6 +5,7 @@ import { Debt } from '@/types/financial';
 import { Scale, DollarSign, Calendar, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Button } from '@/components/ui/button'; // Adicionado
 
 interface DebtCardProps {
   debt: Debt;

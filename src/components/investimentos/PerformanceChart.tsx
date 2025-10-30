@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Investment } from '@/types/financial';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, DollarSign } from 'lucide-react'; // Adicionado DollarSign
 import { CHART_COLORS, formatCurrency } from '@/utils/chartColors';
 import { useTheme } from 'next-themes';
 
