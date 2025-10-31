@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Category, Client, TablesInsert, TablesUpdate } from '@/types/financial';
 import { useMockUserId } from '@/hooks/useMockUserId';
+import { startOfDay, endOfDay } from 'date-fns';
 
 const userId = useMockUserId();
 
@@ -44,12 +45,25 @@ const convertToCategory = (data: any): Category => ({
 
 // --- Data Access Functions ---
 
-export async function fetchTransactions(): Promise<Transaction[]> {
-  const { data, error } = await supabase
+export async function fetchTransactions(startDate?: Date, endDate?: Date): Promise<Transaction[]> {
+  let query = supabase
     .from('transactions')
     .select('*')
     .eq('deletado', false)
     .order('data', { ascending: false });
+
+  // Aplicar filtro de data se fornecido
+  if (startDate) {
+    const start = startOfDay(startDate);
+    query = query.gte('data', start.toISOString().split('T')[0]);
+  }
+
+  if (endDate) {
+    const end = endOfDay(endDate);
+    query = query.lte('data', end.toISOString().split('T')[0]);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return (data || []).map(convertToTransaction);

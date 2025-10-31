@@ -8,12 +8,13 @@ export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [dateFilter, setDateFilter] = useState<{ startDate?: Date; endDate?: Date }>({});
   const { showSuccess, showError } = useToastNotifications();
 
-  const loadTransactions = useCallback(async () => {
+  const loadTransactions = useCallback(async (startDate?: Date, endDate?: Date) => {
     try {
       setLoading(true);
-      const data = await fetchTransactions();
+      const data = await fetchTransactions(startDate, endDate);
       setTransactions(data);
       return data;
     } catch (error) {
@@ -22,12 +23,12 @@ export const useTransactions = () => {
       setTransactions([]);
       return [];
     } finally {
-      setLoading(false); // Garante que o loading seja false
+      setLoading(false);
     }
   }, [showError]);
 
   useEffect(() => {
-    loadTransactions();
+    loadTransactions(dateFilter.startDate, dateFilter.endDate);
     
     // Realtime subscription
     const channel = supabase
@@ -37,7 +38,7 @@ export const useTransactions = () => {
         { event: '*', schema: 'public', table: 'transactions' },
         () => {
           console.log('Realtime update received. Reloading transactions...');
-          loadTransactions();
+          loadTransactions(dateFilter.startDate, dateFilter.endDate);
         }
       )
       .subscribe();
@@ -45,7 +46,7 @@ export const useTransactions = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [loadTransactions]);
+  }, [loadTransactions, dateFilter]);
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'deletado'>) => {
     try {
@@ -108,5 +109,6 @@ export const useTransactions = () => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    setDateFilter: (startDate: Date, endDate: Date) => setDateFilter({ startDate, endDate }),
   };
 };

@@ -10,9 +10,9 @@ interface CategoryChartsProps {
   transactions: Transaction[];
   categories: Category[];
   workspace: 'PF' | 'PJ';
-  periodFilter: {
-    startDate?: Date;
-    endDate?: Date;
+  dateRange: {
+    startDate: Date;
+    endDate: Date;
   };
 }
 
@@ -20,7 +20,7 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
   transactions, 
   categories, 
   workspace, 
-  periodFilter 
+  dateRange
 }) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
@@ -31,14 +31,14 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
     return transactions.filter(t => {
       if (t.deletado || t.origem !== workspace) return false;
       
-      if (periodFilter.startDate && periodFilter.endDate) {
+      if (dateRange.startDate && dateRange.endDate) {
         const transactionDate = new Date(t.data);
-        if (transactionDate < periodFilter.startDate || transactionDate > periodFilter.endDate) return false;
+        if (transactionDate < dateRange.startDate || transactionDate > dateRange.endDate) return false;
       }
       
       return true;
     });
-  }, [transactions, workspace, periodFilter]);
+  }, [transactions, workspace, dateRange]);
 
   const categoryData = useMemo(() => {
     const entradaData: { [key: string]: number } = {};

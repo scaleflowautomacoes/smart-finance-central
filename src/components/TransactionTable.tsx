@@ -11,19 +11,14 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { useDebounce } from '@/hooks/useDebounce';
-import { PeriodType } from './PeriodFilter';
-import PeriodFilter from './PeriodFilter';
+import { DateRangeState } from './DateRangeFilter';
 import TransactionFilters from './TransactionFilters';
 import RecurrenceIndicator from './RecurrenceIndicator';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   workspace: 'PF' | 'PJ';
-  periodFilter: {
-    type: PeriodType;
-    startDate?: Date;
-    endDate?: Date;
-  };
+  dateRange: DateRangeState;
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
   loading?: boolean;
@@ -32,7 +27,7 @@ interface TransactionTableProps {
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   workspace,
-  periodFilter,
+  dateRange,
   onEdit,
   onDelete,
   loading = false
@@ -63,14 +58,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       if (debouncedSearchTerm && !t.nome.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) return false;
       
       // Filter by period
-      if (periodFilter.startDate && periodFilter.endDate) {
+      if (dateRange.startDate && dateRange.endDate) {
         const transactionDate = new Date(t.data);
-        if (transactionDate < periodFilter.startDate || transactionDate > periodFilter.endDate) return false;
+        if (transactionDate < dateRange.startDate || transactionDate > dateRange.endDate) return false;
       }
       
       return true;
     });
-  }, [transactions, workspace, debouncedFilterStatus, debouncedFilterType, debouncedFilterCategory, debouncedFilterRecurrence, debouncedFilterPayment, debouncedSearchTerm, periodFilter]);
+  }, [transactions, workspace, debouncedFilterStatus, debouncedFilterType, debouncedFilterCategory, debouncedFilterRecurrence, debouncedFilterPayment, debouncedSearchTerm, dateRange]);
 
   const formatCurrency = useMemo(() => {
     return new Intl.NumberFormat('pt-BR', {
@@ -163,15 +158,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           <CardTitle className="text-lg">
             Transações - {workspace === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
           </CardTitle>
-          
-          <div className="flex items-center space-x-4">
-            <PeriodFilter
-              selectedPeriod={periodFilter.type}
-              customStartDate={periodFilter.startDate}
-              customEndDate={periodFilter.endDate}
-              onPeriodChange={() => {}}
-            />
-          </div>
         </div>
         
         <TransactionFilters

@@ -3,7 +3,7 @@ import Layout from '@/components/Layout';
 import { Briefcase, Filter } from 'lucide-react';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import PeriodFilter, { PeriodType } from '@/components/PeriodFilter';
+import DateRangeFilter, { DateRangeState, PresetName } from '@/components/DateRangeFilter';
 import { startOfYear, endOfMonth, startOfMonth } from 'date-fns';
 import { useProfitLoss } from '@/hooks/useProfitLoss';
 import DRETable from '@/components/lucro/DRETable';
@@ -13,12 +13,8 @@ const Lucro = () => {
   const now = new Date();
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
   
-  const [periodFilter, setPeriodFilter] = useState<{
-    type: PeriodType;
-    startDate: Date;
-    endDate: Date;
-  }>({
-    type: 'custom', // Usamos custom para representar o período Jan-Atual
+  const [dateRange, setDateRange] = useState<DateRangeState>({
+    presetName: 'custom',
     startDate: startOfYear(now),
     endDate: endOfMonth(now)
   });
@@ -29,18 +25,20 @@ const Lucro = () => {
     transactions, 
     categories,
     currentWorkspace, 
-    periodFilter.startDate, 
-    periodFilter.endDate
+    dateRange.startDate, 
+    dateRange.endDate
   );
 
-  const handlePeriodChange = (period: PeriodType, startDate?: Date, endDate?: Date) => {
-    if (startDate && endDate) {
-      setPeriodFilter({
-        type: period,
-        startDate,
-        endDate
-      });
-    }
+  const handleRangeChange = (start: Date, end: Date, presetName: PresetName) => {
+    setDateRange({ startDate: start, endDate: end, presetName });
+  };
+
+  const handleClearFilter = () => {
+    setDateRange({
+      startDate: startOfYear(now),
+      endDate: endOfMonth(now),
+      presetName: 'custom'
+    });
   };
 
   if (loading || dreLoading) {
@@ -70,11 +68,12 @@ const Lucro = () => {
           
           <div className="flex items-center space-x-3">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <PeriodFilter
-              selectedPeriod={periodFilter.type}
-              customStartDate={periodFilter.startDate}
-              customEndDate={periodFilter.endDate}
-              onPeriodChange={handlePeriodChange}
+            <DateRangeFilter
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              presetName={dateRange.presetName}
+              onRangeChange={handleRangeChange}
+              onClear={handleClearFilter}
             />
           </div>
         </div>

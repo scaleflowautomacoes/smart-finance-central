@@ -5,7 +5,7 @@ import TransactionTable from '@/components/TransactionTable';
 import TransactionForm from '@/components/TransactionForm';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import { Transaction } from '@/types/financial';
-import { PeriodType } from '@/components/PeriodFilter';
+import { DateRangeState, PresetName } from '@/components/DateRangeFilter';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -18,33 +18,29 @@ const Index = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
   
-  const [periodFilter, setPeriodFilter] = useState<{
-    type: PeriodType;
-    startDate?: Date;
-    endDate?: Date;
-  }>(() => {
+  const [dateRange, setDateRange] = useState<DateRangeState>(() => {
     const now = new Date();
-    const defaultPeriod = {
-      type: 'current' as PeriodType,
+    const defaultRange: DateRangeState = {
       startDate: startOfMonth(now),
-      endDate: endOfMonth(now)
+      endDate: endOfMonth(now),
+      presetName: 'este-mes'
     };
     
-    const saved = localStorage.getItem('financial-period');
+    const saved = localStorage.getItem('financial-date-range');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         return {
-          ...parsed,
-          startDate: parsed.startDate ? new Date(parsed.startDate) : defaultPeriod.startDate,
-          endDate: parsed.endDate ? new Date(parsed.endDate) : defaultPeriod.endDate
+          startDate: parsed.startDate ? new Date(parsed.startDate) : defaultRange.startDate,
+          endDate: parsed.endDate ? new Date(parsed.endDate) : defaultRange.endDate,
+          presetName: parsed.presetName || 'este-mes'
         };
       } catch (e) {
-        console.error("Failed to parse financial-period from localStorage", e);
-        return defaultPeriod;
+        console.error("Failed to parse financial-date-range from localStorage", e);
+        return defaultRange;
       }
     }
-    return defaultPeriod;
+    return defaultRange;
   });
 
   const {
@@ -57,7 +53,8 @@ const Index = () => {
     updateTransaction,
     deleteTransaction,
     addCategory,
-    refreshData
+    refreshData,
+    setDateFilter
   } = useSupabaseFinancialData();
 
   // DEBUG LOG: Verificar se as transações estão sendo carregadas
@@ -71,20 +68,32 @@ const Index = () => {
     localStorage.setItem('financial-workspace', currentWorkspace);
   }, [currentWorkspace]);
 
+  // Aplicar filtro de datas ao carregar transações
   useEffect(() => {
-    // Salva apenas strings de data para evitar problemas de desserialização
-    localStorage.setItem('financial-period', JSON.stringify({
-      type: periodFilter.type,
-      startDate: periodFilter.startDate?.toISOString(),
-      endDate: periodFilter.endDate?.toISOString()
-    }));
-  }, [periodFilter]);
+    if (dateRange.startDate && dateRange.endDate) {
+      setDateFilter(dateRange.startDate, dateRange.endDate);
+    }
+  }, [dateRange, setDateFilter]);
 
-  const handlePeriodChange = (period: PeriodType, startDate?: Date, endDate?: Date) => {
-    setPeriodFilter({
-      type: period,
-      startDate,
-      endDate
+  // Salvar no localStorage quando mudar
+  useEffect(() => {
+    localStorage.setItem('financial-date-range', JSON.stringify({
+      startDate: dateRange.startDate.toISOString(),
+      endDate: dateRange.endDate.toISOString(),
+      presetName: dateRange.presetName
+    }));
+  }, [dateRange]);
+
+  const handleRangeChange = (start: Date, end: Date, presetName: PresetName) => {
+    setDateRange({ startDate: start, endDate: end, presetName });
+  };
+
+  const handleClearFilter = () => {
+    const now = new Date();
+    setDateRange({
+      startDate: startOfMonth(now),
+      endDate: endOfMonth(now),
+      presetName: 'este-mes'
     });
   };
 
@@ -181,8 +190,9 @@ const Index = () => {
           workspace={currentWorkspace}
           transactions={transactions}
           categories={categories}
-          onPeriodChange={handlePeriodChange}
-          periodFilter={periodFilter}
+          dateRange={dateRange}
+          onRangeChange={handleRangeChange}
+          onClearFilter={handleClearFilter}
           loading={loading}
           onRefreshData={refreshData}
           onNewTransaction={handleNewTransaction}
@@ -191,7 +201,7 @@ const Index = () => {
         <TransactionTable
           transactions={transactions}
           workspace={currentWorkspace}
-          periodFilter={periodFilter}
+          dateRange={dateRange}
           onEdit={(transaction: Transaction) => {
             setEditingTransaction(transaction);
             setShowForm(true);

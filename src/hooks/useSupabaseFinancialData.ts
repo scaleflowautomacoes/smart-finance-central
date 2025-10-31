@@ -68,7 +68,8 @@ export const useSupabaseFinancialData = () => {
     loadTransactions, 
     addTransaction, 
     updateTransaction, 
-    deleteTransaction 
+    deleteTransaction,
+    setDateFilter
   } = useTransactions();
   
   const { 
@@ -133,6 +134,7 @@ export const useSupabaseFinancialData = () => {
     updateTransaction,
     deleteTransaction,
     addCategory,
-    refreshData
+    refreshData,
+    setDateFilter
   };
 };

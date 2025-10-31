@@ -1,12 +1,10 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Transaction, Category } from '@/types/financial';
-import PeriodFilter, { PeriodType } from './PeriodFilter';
+import DateRangeFilter, { DateRangeState, PresetName } from './DateRangeFilter';
 import DashboardMetricsGrid from './DashboardMetricsGrid';
 import DashboardRecentTransactions from './DashboardRecentTransactions';
 import DashboardCharts from './DashboardCharts';
 import CategoryCharts from './CategoryCharts';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
@@ -14,12 +12,9 @@ interface DashboardProps {
   workspace: 'PF' | 'PJ';
   transactions: Transaction[];
   categories: Category[];
-  onPeriodChange: (period: PeriodType, startDate?: Date, endDate?: Date) => void;
-  periodFilter: {
-    type: PeriodType;
-    startDate?: Date;
-    endDate?: Date;
-  };
+  dateRange: DateRangeState;
+  onRangeChange: (start: Date, end: Date, presetName: PresetName) => void;
+  onClearFilter: () => void;
   loading?: boolean;
   onRefreshData?: () => void;
   onNewTransaction: () => void;
@@ -29,19 +24,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   workspace, 
   transactions,
   categories,
-  onPeriodChange,
-  periodFilter,
+  dateRange,
+  onRangeChange,
+  onClearFilter,
   loading = false,
   onRefreshData,
   onNewTransaction
 }) => {
-  const handlePeriodChange = useCallback((period: PeriodType, startDate?: Date, endDate?: Date) => {
-    onPeriodChange(period, startDate, endDate);
-  }, [onPeriodChange]);
-
-  const periodLabel = periodFilter.startDate && periodFilter.endDate 
-    ? `${format(periodFilter.startDate, 'dd/MM/yyyy', { locale: ptBR })} - ${format(periodFilter.endDate, 'dd/MM/yyyy', { locale: ptBR })}`
-    : 'Período Atual';
 
   if (loading) {
     return (
@@ -72,11 +61,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-          <PeriodFilter
-            selectedPeriod={periodFilter.type}
-            customStartDate={periodFilter.startDate}
-            customEndDate={periodFilter.endDate}
-            onPeriodChange={handlePeriodChange}
+          <DateRangeFilter
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+            presetName={dateRange.presetName}
+            onRangeChange={onRangeChange}
+            onClear={onClearFilter}
           />
           <Button 
             onClick={onNewTransaction} 
@@ -89,14 +79,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Métricas Principais (4 Colunas) */}
-      {periodFilter.startDate && periodFilter.endDate && (
-        <DashboardMetricsGrid 
-          transactions={transactions}
-          workspace={workspace}
-          startDate={periodFilter.startDate}
-          endDate={periodFilter.endDate}
-        />
-      )}
+      <DashboardMetricsGrid 
+        transactions={transactions}
+        workspace={workspace}
+        startDate={dateRange.startDate}
+        endDate={dateRange.endDate}
+      />
 
       {/* Últimas Transações */}
       <DashboardRecentTransactions 
@@ -110,15 +98,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         <DashboardCharts 
           transactions={transactions}
           workspace={workspace} 
-          startDate={periodFilter.startDate}
-          endDate={periodFilter.endDate}
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
         />
         
         <CategoryCharts 
           transactions={transactions} 
           categories={categories} 
           workspace={workspace} 
-          periodFilter={periodFilter}
+          dateRange={dateRange}
         />
       </div>
     </div>
