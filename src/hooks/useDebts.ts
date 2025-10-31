@@ -24,12 +24,12 @@ export const useDebts = () => {
 
       const convertedDebts: Debt[] = (data || []).map(d => ({
         ...d,
-        total_amount: parseFloat(d.total_amount),
-        remaining_amount: parseFloat(d.remaining_amount),
-        interest_rate: parseFloat(d.interest_rate),
-        installments_total: parseInt(d.installments_total),
-        installments_paid: parseInt(d.installments_paid),
-        payment_day: parseInt(d.payment_day),
+        total_amount: typeof d.total_amount === 'string' ? parseFloat(d.total_amount) : d.total_amount,
+        remaining_amount: typeof d.remaining_amount === 'string' ? parseFloat(d.remaining_amount) : d.remaining_amount,
+        interest_rate: typeof d.interest_rate === 'string' ? parseFloat(d.interest_rate) : d.interest_rate,
+        installments_total: typeof d.installments_total === 'string' ? parseInt(d.installments_total) : d.installments_total,
+        installments_paid: typeof d.installments_paid === 'string' ? parseInt(d.installments_paid) : d.installments_paid,
+        payment_day: typeof d.payment_day === 'string' ? parseInt(d.payment_day) : d.payment_day,
         status: d.status as 'active' | 'paid' | 'late',
         workspace: d.workspace as 'PF' | 'PJ',
       }));

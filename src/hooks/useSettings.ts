@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Category, Responsavel, TablesInsert, TablesUpdate } from "@/types/financial";
+import { Category, Responsavel } from "@/types/financial";
 import { useToast } from "@/hooks/use-toast";
-import { useMockUserId } from "./useMockUserId";
-import { createCategory } from "@/data/financial"; // Importando funções de acesso a dados
-import { fetchCategories, fetchClients } from "./useAuxiliaryData"; // Importando funções de carregamento sem filtro user_id
+import { createCategory } from "@/data/financial";
 
 // Converters (necessários para tipagem correta)
 const convertToCategory = (data: any): Category => ({
@@ -29,7 +27,6 @@ export const useSettings = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
-  const userId = useMockUserId();
 
   const loadInitialData = useCallback(async () => {
     setLoading(true);
@@ -83,13 +80,10 @@ export const useSettings = () => {
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     setActionLoading(true);
     try {
-      const updatePayload: TablesUpdate<'categories'> = { ...updates, user_id: userId };
-      
       const { data, error } = await supabase
         .from('categories')
-        .update(updatePayload)
+        .update(updates)
         .eq('id', id)
-        .eq('user_id', userId)
         .select()
         .single();
 
@@ -122,8 +116,7 @@ export const useSettings = () => {
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -149,14 +142,9 @@ export const useSettings = () => {
   const addResponsavel = async (responsavel: Omit<Responsavel, 'id'>) => {
     setActionLoading(true);
     try {
-      const insertData: TablesInsert<'responsaveis'> = {
-        ...responsavel,
-        user_id: userId
-      };
-      
       const { data, error } = await supabase
         .from('responsaveis')
-        .insert([insertData])
+        .insert([responsavel])
         .select()
         .single();
 
@@ -187,13 +175,10 @@ export const useSettings = () => {
   const updateResponsavel = async (id: string, updates: Partial<Responsavel>) => {
     setActionLoading(true);
     try {
-      const updatePayload: TablesUpdate<'responsaveis'> = { ...updates, user_id: userId };
-      
       const { data, error } = await supabase
         .from('responsaveis')
-        .update(updatePayload)
+        .update(updates)
         .eq('id', id)
-        .eq('user_id', userId)
         .select()
         .single();
 
@@ -226,8 +211,7 @@ export const useSettings = () => {
       const { error } = await supabase
         .from('responsaveis')
         .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+        .eq('id', id);
 
       if (error) throw error;
 

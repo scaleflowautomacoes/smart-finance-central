@@ -49,7 +49,6 @@ export async function fetchTransactions(): Promise<Transaction[]> {
     .from('transactions')
     .select('*')
     .eq('deletado', false)
-    .eq('user_id', userId)
     .order('data', { ascending: false });
 
   if (error) throw error;
@@ -59,9 +58,9 @@ export async function fetchTransactions(): Promise<Transaction[]> {
 // REMOVIDO: fetchCategories e fetchClients (agora em useAuxiliaryData)
 
 export async function createTransaction(transaction: Omit<Transaction, 'id' | 'deletado'>): Promise<Transaction> {
-  const insertData: TablesInsert<'transactions'> = {
+  const insertData = {
     ...transaction,
-    user_id: userId,
+    user_id: null, // RLS permite user_id NULL
     valor: transaction.valor,
     data: transaction.data,
     deletado: false,
@@ -90,25 +89,24 @@ export async function createTransaction(transaction: Omit<Transaction, 'id' | 'd
 }
 
 export async function updateTransaction(id: string, updates: Partial<Transaction>): Promise<void> {
-  const updateData: TablesUpdate<'transactions'> = {};
+  const updateData: any = {};
   
   // Mapeamento seguro de updates para o tipo Supabase
   Object.keys(updates).forEach(key => {
     const value = updates[key as keyof Partial<Transaction>];
     if (value !== undefined) {
-      updateData[key as keyof TablesUpdate<'transactions'>] = (
+      updateData[key] = (
         (typeof value === 'string' && value.trim() === '') || (typeof value === 'number' && isNaN(value))
           ? null
           : value
-      ) as any;
+      );
     }
   });
 
   const { error } = await supabase
     .from('transactions')
     .update(updateData)
-    .eq('id', id)
-    .eq('user_id', userId);
+    .eq('id', id);
 
   if (error) throw error;
 }
@@ -117,16 +115,14 @@ export async function softDeleteTransaction(id: string): Promise<void> {
   const { error } = await supabase
     .from('transactions')
     .update({ deletado: true })
-    .eq('id', id)
-    .eq('user_id', userId);
+    .eq('id', id);
 
   if (error) throw error;
 }
 
 export async function createCategory(category: Omit<Category, 'id'>): Promise<Category> {
-  const insertData: TablesInsert<'categories'> = {
+  const insertData = {
     ...category,
-    user_id: userId,
     limite_mensal: category.limite_mensal || null,
   };
   

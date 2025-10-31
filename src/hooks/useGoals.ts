@@ -24,8 +24,8 @@ export const useGoals = () => {
 
       const convertedGoals: Goal[] = (data || []).map(g => ({
         ...g,
-        target_amount: parseFloat(g.target_amount),
-        current_amount: parseFloat(g.current_amount),
+        target_amount: typeof g.target_amount === 'string' ? parseFloat(g.target_amount) : g.target_amount,
+        current_amount: typeof g.current_amount === 'string' ? parseFloat(g.current_amount) : g.current_amount,
         status: g.status as 'active' | 'completed' | 'cancelled',
         type: g.type as 'saving' | 'revenue' | 'expense_reduction',
         workspace: g.workspace as 'PF' | 'PJ',

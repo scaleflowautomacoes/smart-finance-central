@@ -125,3 +125,7 @@ export interface Investment {
   status: 'active' | 'sold';
   created_at: string;
 }
+
+// Tipos auxiliares para Supabase - simplificados para compatibilidade
+export type TablesInsert<T extends string> = any;
+export type TablesUpdate<T extends string> = any;

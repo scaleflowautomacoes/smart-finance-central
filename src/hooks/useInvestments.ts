@@ -24,9 +24,9 @@ export const useInvestments = () => {
 
       const convertedInvestments: Investment[] = (data || []).map(i => ({
         ...i,
-        initial_amount: parseFloat(i.initial_amount),
-        current_amount: parseFloat(i.current_amount),
-        expected_return: parseFloat(i.expected_return),
+        initial_amount: typeof i.initial_amount === 'string' ? parseFloat(i.initial_amount) : i.initial_amount,
+        current_amount: typeof i.current_amount === 'string' ? parseFloat(i.current_amount) : i.current_amount,
+        expected_return: typeof i.expected_return === 'string' ? parseFloat(i.expected_return) : i.expected_return,
         type: i.type as Investment['type'],
         status: i.status as Investment['status'],
         workspace: i.workspace as 'PF' | 'PJ',
