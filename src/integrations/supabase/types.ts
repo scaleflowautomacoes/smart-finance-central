@@ -22,7 +22,6 @@ export type Database = {
           nome: string
           origem: string
           tipo: string
-          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -31,7 +30,6 @@ export type Database = {
           nome: string
           origem: string
           tipo: string
-          user_id?: string
         }
         Update: {
           created_at?: string | null
@@ -40,34 +38,218 @@ export type Database = {
           nome?: string
           origem?: string
           tipo?: string
-          user_id?: string
         }
         Relationships: []
       }
+      debts: {
+        Row: {
+          created_at: string
+          creditor: string
+          due_date: string
+          id: string
+          installments_paid: number
+          installments_total: number
+          interest_rate: number
+          name: string
+          payment_day: number
+          remaining_amount: number
+          status: string
+          total_amount: number
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          created_at?: string
+          creditor: string
+          due_date: string
+          id?: string
+          installments_paid?: number
+          installments_total: number
+          interest_rate?: number
+          name: string
+          payment_day: number
+          remaining_amount: number
+          status?: string
+          total_amount: number
+          user_id?: string
+          workspace: string
+        }
+        Update: {
+          created_at?: string
+          creditor?: string
+          due_date?: string
+          id?: string
+          installments_paid?: number
+          installments_total?: number
+          interest_rate?: number
+          name?: string
+          payment_day?: number
+          remaining_amount?: number
+          status?: string
+          total_amount?: number
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          current_amount: number
+          deadline: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          target_amount: number
+          type: string
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          current_amount?: number
+          deadline: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          target_amount: number
+          type?: string
+          user_id?: string
+          workspace: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          current_amount?: number
+          deadline?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          target_amount?: number
+          type?: string
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          created_at: string
+          current_amount: number
+          expected_return: number
+          id: string
+          initial_amount: number
+          name: string
+          purchase_date: string
+          status: string
+          type: string
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          created_at?: string
+          current_amount: number
+          expected_return?: number
+          id?: string
+          initial_amount: number
+          name: string
+          purchase_date: string
+          status?: string
+          type: string
+          user_id?: string
+          workspace: string
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          expected_return?: number
+          id?: string
+          initial_amount?: number
+          name?: string
+          purchase_date?: string
+          status?: string
+          type?: string
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      maintenances: {
+        Row: {
+          cost: number
+          created_at: string
+          date_performed: string
+          description: string
+          id: string
+          km_performed: number
+          next_date: string | null
+          next_km: number | null
+          type: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string
+          date_performed: string
+          description: string
+          id?: string
+          km_performed: number
+          next_date?: string | null
+          next_km?: number | null
+          type: string
+          user_id?: string
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          date_performed?: string
+          description?: string
+          id?: string
+          km_performed?: number
+          next_date?: string | null
+          next_km?: number | null
+          type?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenances_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       responsaveis: {
         Row: {
-          ativo: boolean | null
+          ativo: boolean
           created_at: string | null
           id: string
           nome: string
           tipo: string
-          user_id: string
         }
         Insert: {
-          ativo?: boolean | null
+          ativo?: boolean
           created_at?: string | null
           id?: string
           nome: string
           tipo: string
-          user_id?: string
         }
         Update: {
-          ativo?: boolean | null
+          ativo?: boolean
           created_at?: string | null
           id?: string
           nome?: string
           tipo?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -77,7 +259,7 @@ export type Database = {
           cliente_id: string | null
           created_at: string | null
           data: string
-          deletado: boolean | null
+          deletado: boolean
           dependencia: string | null
           forma_pagamento: string
           id: string
@@ -104,7 +286,7 @@ export type Database = {
           cliente_id?: string | null
           created_at?: string | null
           data: string
-          deletado?: boolean | null
+          deletado?: boolean
           dependencia?: string | null
           forma_pagamento: string
           id?: string
@@ -131,7 +313,7 @@ export type Database = {
           cliente_id?: string | null
           created_at?: string | null
           data?: string
-          deletado?: boolean | null
+          deletado?: boolean
           dependencia?: string | null
           forma_pagamento?: string
           id?: string
@@ -163,230 +345,42 @@ export type Database = {
           },
         ]
       }
-      debts: {
-        Row: {
-          created_at: string | null
-          creditor: string
-          due_date: string
-          id: string
-          installments_paid: number
-          installments_total: number
-          interest_rate: number
-          name: string
-          payment_day: number
-          remaining_amount: number
-          status: string
-          total_amount: number
-          user_id: string
-          workspace: string
-        }
-        Insert: {
-          created_at?: string | null
-          creditor: string
-          due_date: string
-          id?: string
-          installments_paid?: number
-          installments_total: number
-          interest_rate: number
-          name: string
-          payment_day: number
-          remaining_amount?: number
-          status: string
-          total_amount: number
-          user_id?: string
-          workspace: string
-        }
-        Update: {
-          created_at?: string | null
-          creditor?: string
-          due_date?: string
-          id?: string
-          installments_paid?: number
-          installments_total?: number
-          interest_rate?: number
-          name?: string
-          payment_day?: number
-          remaining_amount?: number
-          status?: string
-          total_amount?: number
-          user_id?: string
-          workspace?: string
-        }
-        Relationships: []
-      }
-      goals: {
-        Row: {
-          category_id: string | null
-          created_at: string | null
-          current_amount: number
-          deadline: string
-          description: string | null
-          id: string
-          name: string
-          status: string
-          target_amount: number
-          type: string
-          user_id: string
-          workspace: string
-        }
-        Insert: {
-          category_id?: string | null
-          created_at?: string | null
-          current_amount?: number
-          deadline: string
-          description?: string | null
-          id?: string
-          name: string
-          status?: string
-          target_amount: number
-          type: string
-          user_id?: string
-          workspace: string
-        }
-        Update: {
-          category_id?: string | null
-          created_at?: string | null
-          current_amount?: number
-          deadline?: string
-          description?: string | null
-          id?: string
-          name?: string
-          status?: string
-          target_amount?: number
-          type?: string
-          user_id?: string
-          workspace?: string
-        }
-        Relationships: []
-      }
       vehicles: {
         Row: {
-          brand: string | null
-          created_at: string | null
+          brand: string
+          created_at: string
           current_km: number
           id: string
-          model: string | null
+          model: string
           name: string
-          plate: string | null
+          plate: string
           user_id: string
           workspace: string
-          year: number | null
+          year: number
         }
         Insert: {
-          brand?: string | null
-          created_at?: string | null
-          current_km: number
-          id?: string
-          model?: string | null
-          name: string
-          plate?: string | null
-          user_id?: string
-          workspace: string
-          year?: number | null
-        }
-        Update: {
-          brand?: string | null
-          created_at?: string | null
+          brand: string
+          created_at?: string
           current_km?: number
           id?: string
-          model?: string | null
-          name?: string
-          plate?: string | null
-          user_id?: string
-          workspace?: string
-          year?: number | null
-        }
-        Relationships: []
-      }
-      maintenances: {
-        Row: {
-          cost: number
-          created_at: string | null
-          date_performed: string
-          description: string | null
-          id: string
-          km_performed: number
-          next_date: string | null
-          next_km: number | null
-          type: string
-          user_id: string
-          vehicle_id: string
-        }
-        Insert: {
-          cost: number
-          created_at?: string | null
-          date_performed: string
-          description?: string | null
-          id?: string
-          km_performed: number
-          next_date?: string | null
-          next_km?: number | null
-          type: string
-          user_id?: string
-          vehicle_id: string
-        }
-        Update: {
-          cost?: number
-          created_at?: string | null
-          date_performed?: string
-          description?: string | null
-          id?: string
-          km_performed?: number
-          next_date?: string | null
-          next_km?: number | null
-          type?: string
-          user_id?: string
-          vehicle_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "maintenances_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investments: {
-        Row: {
-          created_at: string | null
-          current_amount: number
-          expected_return: number | null
-          id: string
-          initial_amount: number
+          model: string
           name: string
-          purchase_date: string
-          status: string
-          type: string
-          user_id: string
-          workspace: string
-        }
-        Insert: {
-          created_at?: string | null
-          current_amount?: number
-          expected_return?: number | null
-          id?: string
-          initial_amount: number
-          name: string
-          purchase_date: string
-          status?: string
-          type: string
+          plate: string
           user_id?: string
           workspace: string
+          year: number
         }
         Update: {
-          created_at?: string | null
-          current_amount?: number
-          expected_return?: number | null
+          brand?: string
+          created_at?: string
+          current_km?: number
           id?: string
-          initial_amount?: number
+          model?: string
           name?: string
-          purchase_date?: string
-          status?: string
-          type?: string
+          plate?: string
           user_id?: string
           workspace?: string
+          year?: number
         }
         Relationships: []
       }
@@ -406,14 +400,8 @@ export type Database = {
           workspace: string
         }[]
       }
-      claim_unowned_transactions: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      gerar_proximas_transacoes_recorrentes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      claim_unowned_transactions: { Args: never; Returns: number }
+      gerar_proximas_transacoes_recorrentes: { Args: never; Returns: undefined }
       gerenciar_recorrencia: {
         Args: { p_acao: string; p_transacao_pai_id: string }
         Returns: undefined

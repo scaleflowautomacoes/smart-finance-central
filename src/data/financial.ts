@@ -1,9 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Transaction, Category, Client, TablesInsert, TablesUpdate } from '@/types/financial';
-import { useMockUserId } from '@/hooks/useMockUserId';
+import { Transaction, Category } from '@/types/financial';
 import { startOfDay, endOfDay } from 'date-fns';
-
-const userId = useMockUserId();
 
 // --- Converters ---
 
