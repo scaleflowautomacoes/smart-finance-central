@@ -5,9 +5,9 @@ import DashboardMetricsGrid from './DashboardMetricsGrid';
 import DashboardRecentTransactions from './DashboardRecentTransactions';
 import DashboardCharts from './DashboardCharts';
 import CategoryCharts from './CategoryCharts';
+import MonthlyTrendChart from './dashboard/MonthlyTrendChart';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-
 interface DashboardProps {
   workspace: 'PF' | 'PJ';
   transactions: Transaction[];
@@ -91,6 +91,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         transactions={transactions} 
         categories={categories} 
         workspace={workspace} 
+      />
+
+      {/* Gráfico de Tendências */}
+      <MonthlyTrendChart 
+        transactions={transactions}
+        workspace={workspace}
       />
 
       {/* Gráficos */}
