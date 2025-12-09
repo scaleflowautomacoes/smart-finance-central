@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Transaction } from '@/types/financial';
 import { useToastNotifications } from './useToastNotifications';
-import { fetchTransactions, createTransaction, updateTransaction, softDeleteTransaction, generateRecurrences } from '@/data/financial';
+import { 
+  fetchTransactions, 
+  createTransaction, 
+  updateTransaction as updateTransactionApi, 
+  softDeleteTransaction, 
+  generateRecurrences 
+} from '@/data/financial';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useTransactions = () => {
@@ -62,7 +68,7 @@ export const useTransactions = () => {
       }
       
       // Recarrega após a criação e possível geração de recorrências
-      await loadTransactions();
+      await loadTransactions(dateFilter.startDate, dateFilter.endDate);
       return newTransaction;
     } catch (error) {
       console.error('Erro ao adicionar transação:', error);
@@ -76,9 +82,9 @@ export const useTransactions = () => {
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
     try {
       setActionLoading(true);
-      await updateTransaction(id, updates);
+      await updateTransactionApi(id, updates);
       showSuccess('Transação atualizada com sucesso!');
-      await loadTransactions();
+      await loadTransactions(dateFilter.startDate, dateFilter.endDate);
     } catch (error) {
       console.error('Erro ao atualizar transação:', error);
       showError('Erro ao atualizar transação. Tente novamente.');
@@ -92,7 +98,7 @@ export const useTransactions = () => {
       setActionLoading(true);
       await softDeleteTransaction(id);
       showSuccess('Transação excluída com sucesso!');
-      await loadTransactions();
+      await loadTransactions(dateFilter.startDate, dateFilter.endDate);
     } catch (error) {
       console.error('Erro ao deletar transação:', error);
       showError('Erro ao excluir transação. Tente novamente.');

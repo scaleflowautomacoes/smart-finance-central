@@ -57,13 +57,6 @@ const Index = () => {
     setDateFilter
   } = useSupabaseFinancialData();
 
-  // DEBUG LOG: Verificar se as transações estão sendo carregadas
-  useEffect(() => {
-    if (!loading) {
-      console.log(`[Index] Transações carregadas: ${transactions.length}`);
-    }
-  }, [loading, transactions]);
-
   useEffect(() => {
     localStorage.setItem('financial-workspace', currentWorkspace);
   }, [currentWorkspace]);
@@ -109,26 +102,17 @@ const Index = () => {
 
   const handleSubmitTransaction = async (transactionData: Omit<Transaction, 'id' | 'deletado'>) => {
     try {
-      console.log('🎯 Index.tsx - Recebendo dados da transação:', transactionData);
-      
       if (editingTransaction) {
-        console.log('✏️ Atualizando transação existente:', editingTransaction.id);
         await updateTransaction(editingTransaction.id, transactionData);
       } else {
-        console.log('➕ Criando nova transação');
         await addTransaction(transactionData);
       }
       
-      // Forçar refresh dos dados após salvar
-      console.log('🔄 Forçando refresh dos dados...');
       await refreshData();
-      
       setShowForm(false);
       setEditingTransaction(undefined);
-      
-      console.log('✅ Transação processada com sucesso');
     } catch (error) {
-      console.error('❌ Erro ao salvar transação no Index.tsx:', error);
+      console.error('Erro ao salvar transação:', error);
     }
   };
 
