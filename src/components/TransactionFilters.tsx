@@ -17,7 +17,7 @@ interface TransactionFiltersProps {
   onRecurrenceChange: (value: string) => void;
   filterPayment: string;
   onPaymentChange: (value: string) => void;
-  uniqueCategories: string[];
+  uniqueCategories: Array<{ id: string; nome: string }>;
   workspace: 'PF' | 'PJ';
   onClearFilters: () => void;
 }
@@ -89,9 +89,9 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as Categorias</SelectItem>
-            {uniqueCategories.map((categoryId) => (
-              <SelectItem key={categoryId} value={categoryId || ''}>
-                {categoryId || 'Sem categoria'}
+            {uniqueCategories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.nome}
               </SelectItem>
             ))}
           </SelectContent>

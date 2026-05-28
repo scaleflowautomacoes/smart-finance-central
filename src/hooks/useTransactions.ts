@@ -6,7 +6,10 @@ import {
   createTransaction, 
   updateTransaction as updateTransactionApi, 
   softDeleteTransaction, 
-  generateRecurrences 
+  generateRecurrences,
+  bulkUpdateTransactions as bulkUpdateTransactionsApi,
+  bulkSoftDeleteTransactions as bulkSoftDeleteTransactionsApi,
+  bulkCancelFutureRecurrences as bulkCancelFutureRecurrencesApi
 } from '@/data/financial';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,6 +19,21 @@ export const useTransactions = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [dateFilter, setDateFilter] = useState<{ startDate?: Date; endDate?: Date }>({});
   const { showSuccess, showError } = useToastNotifications();
+
+  const setTransactionsDateFilter = useCallback((startDate?: Date, endDate?: Date) => {
+    setDateFilter((previous) => {
+      const previousStart = previous.startDate?.getTime();
+      const previousEnd = previous.endDate?.getTime();
+      const nextStart = startDate?.getTime();
+      const nextEnd = endDate?.getTime();
+
+      if (previousStart === nextStart && previousEnd === nextEnd) {
+        return previous;
+      }
+
+      return { startDate, endDate };
+    });
+  }, []);
 
   const loadTransactions = useCallback(async (startDate?: Date, endDate?: Date) => {
     try {
@@ -107,6 +125,51 @@ export const useTransactions = () => {
     }
   };
 
+  const bulkUpdateTransactions = async (ids: string[], updates: Partial<Transaction>) => {
+    try {
+      setActionLoading(true);
+      await bulkUpdateTransactionsApi(ids, updates);
+      showSuccess(`${ids.length} transações atualizadas com sucesso!`);
+      await loadTransactions(dateFilter.startDate, dateFilter.endDate);
+    } catch (error) {
+      console.error('Erro ao atualizar transações em massa:', error);
+      showError('Erro ao atualizar transações em massa. Tente novamente.');
+      throw error;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const bulkDeleteTransactions = async (ids: string[]) => {
+    try {
+      setActionLoading(true);
+      await bulkSoftDeleteTransactionsApi(ids);
+      showSuccess(`${ids.length} transações excluídas com sucesso!`);
+      await loadTransactions(dateFilter.startDate, dateFilter.endDate);
+    } catch (error) {
+      console.error('Erro ao excluir transações em massa:', error);
+      showError('Erro ao excluir transações em massa. Tente novamente.');
+      throw error;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const bulkCancelFutureRecurrences = async (parentIds: string[]) => {
+    try {
+      setActionLoading(true);
+      await bulkCancelFutureRecurrencesApi(parentIds);
+      showSuccess(`Recorrência removida de ${parentIds.length} controle(s)!`);
+      await loadTransactions(dateFilter.startDate, dateFilter.endDate);
+    } catch (error) {
+      console.error('Erro ao remover recorrências em massa:', error);
+      showError('Erro ao remover recorrências em massa. Tente novamente.');
+      throw error;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return {
     transactions,
     loading,
@@ -115,6 +178,9 @@ export const useTransactions = () => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
-    setDateFilter: (startDate: Date, endDate: Date) => setDateFilter({ startDate, endDate }),
+    bulkUpdateTransactions,
+    bulkDeleteTransactions,
+    bulkCancelFutureRecurrences,
+    setDateFilter: setTransactionsDateFilter,
   };
 };

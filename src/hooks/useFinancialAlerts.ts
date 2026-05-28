@@ -1,8 +1,15 @@
 
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { startOfMonth, endOfMonth, addDays, format, isWithinInterval } from 'date-fns';
+import { startOfMonth, endOfMonth, addDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  compareFinancialDateStrings,
+  formatFinancialDate,
+  isFinancialDateWithinRange,
+  parseFinancialDate,
+} from '@/utils/financialDate';
+import { isProjectedTransaction } from '@/utils/transactionStatus';
 
 export interface FinancialAlert {
   type: 'critical' | 'warning' | 'info';
@@ -31,18 +38,18 @@ export const useFinancialAlerts = (transactions: Transaction[], workspace: 'PF' 
       !t.deletado &&
       t.origem === workspace &&
       t.recorrencia_ativa !== false &&
-      isWithinInterval(new Date(t.data), { start: monthStart, end: monthEnd })
+      isFinancialDateWithinRange(t.data, monthStart, monthEnd)
     );
 
     console.log(`[${workspace}] Transações do mês:`, workspaceTransactions.length);
     
     // Calcular entradas e saídas previstas (incluindo recorrentes)
     const entradasPrevistas = workspaceTransactions
-      .filter(t => t.tipo === 'entrada' && t.status !== 'realizada')
+      .filter(t => t.tipo === 'entrada' && isProjectedTransaction(t))
       .reduce((sum, t) => sum + t.valor, 0);
     
     const saidasPrevistas = workspaceTransactions
-      .filter(t => t.tipo === 'saida' && t.status !== 'realizada')
+      .filter(t => t.tipo === 'saida' && isProjectedTransaction(t))
       .reduce((sum, t) => sum + t.valor, 0);
 
     // Calcular entradas realizadas
@@ -75,7 +82,7 @@ export const useFinancialAlerts = (transactions: Transaction[], workspace: 'PF' 
     const vencimentosProximos = workspaceTransactions.filter(t => 
       t.tipo === 'saida' && 
       t.status === 'prevista' &&
-      isWithinInterval(new Date(t.data), { start: now, end: proximosDez })
+      isFinancialDateWithinRange(t.data, now, proximosDez)
     );
 
     const valorProximosDez = vencimentosProximos.reduce((sum, t) => sum + t.valor, 0);
@@ -94,11 +101,11 @@ export const useFinancialAlerts = (transactions: Transaction[], workspace: 'PF' 
     const recebimentos = workspaceTransactions.filter(t => 
       t.tipo === 'entrada' && 
       t.status === 'prevista'
-    ).sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    ).sort((a, b) => compareFinancialDateStrings(a.data, b.data));
 
     if (recebimentos.length > 0) {
-      const primeiroRecebimento = new Date(recebimentos[0].data);
-      const ultimoRecebimento = new Date(recebimentos[recebimentos.length - 1].data);
+      const primeiroRecebimento = parseFinancialDate(recebimentos[0].data);
+      const ultimoRecebimento = parseFinancialDate(recebimentos[recebimentos.length - 1].data);
       
       alertas.push({
         type: 'info',
@@ -120,15 +127,15 @@ export const useFinancialAlerts = (transactions: Transaction[], workspace: 'PF' 
       !t.deletado &&
       t.origem === workspace &&
       t.recorrencia_ativa !== false &&
-      isWithinInterval(new Date(t.data), { start: monthStart, end: monthEnd })
+      isFinancialDateWithinRange(t.data, monthStart, monthEnd)
     );
 
     const saidasPrevistas = workspaceTransactions
-      .filter(t => t.tipo === 'saida' && t.status !== 'realizada')
+      .filter(t => t.tipo === 'saida' && isProjectedTransaction(t))
       .reduce((sum, t) => sum + t.valor, 0);
 
     const entradasPrevistas = workspaceTransactions
-      .filter(t => t.tipo === 'entrada' && t.status !== 'realizada')
+      .filter(t => t.tipo === 'entrada' && isProjectedTransaction(t))
       .reduce((sum, t) => sum + t.valor, 0);
 
     const entradasRealizadas = workspaceTransactions
@@ -138,12 +145,13 @@ export const useFinancialAlerts = (transactions: Transaction[], workspace: 'PF' 
     // Calcular datas críticas
     const saidasOrdenadas = workspaceTransactions
       .filter(t => t.tipo === 'saida' && t.status === 'prevista')
-      .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+      .sort((a, b) => compareFinancialDateStrings(a.data, b.data));
 
     const criticalDates = saidasOrdenadas.reduce((acc, transaction) => {
-      const date = new Date(transaction.data);
+      const date = parseFinancialDate(transaction.data);
+      const dateKey = formatFinancialDate(date);
       const existing = acc.find(item => 
-        item.date.toDateString() === date.toDateString()
+        formatFinancialDate(item.date) === dateKey
       );
       
       if (existing) {
@@ -163,11 +171,11 @@ export const useFinancialAlerts = (transactions: Transaction[], workspace: 'PF' 
     // Período ideal para recebimentos
     const recebimentos = workspaceTransactions
       .filter(t => t.tipo === 'entrada' && t.status === 'prevista')
-      .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+      .sort((a, b) => compareFinancialDateStrings(a.data, b.data));
 
     const idealReceivingPeriod = recebimentos.length > 0 ? {
-      start: new Date(recebimentos[0].data),
-      end: new Date(recebimentos[recebimentos.length - 1].data)
+      start: parseFinancialDate(recebimentos[0].data),
+      end: parseFinancialDate(recebimentos[recebimentos.length - 1].data)
     } : {
       start: monthStart,
       end: monthEnd

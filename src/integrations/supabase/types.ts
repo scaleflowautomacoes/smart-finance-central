@@ -381,6 +381,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancelar_recorrencias_em_lote: {
+        Args: { p_transacao_pai_ids: string[] }
+        Returns: undefined
+      }
       claim_unowned_transactions: { Args: never; Returns: number }
       gerar_proximas_transacoes_recorrentes: { Args: never; Returns: undefined }
       gerenciar_recorrencia: {

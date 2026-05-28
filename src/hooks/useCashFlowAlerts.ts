@@ -1,8 +1,8 @@
 
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { addDays, format, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { addDays, startOfMonth, endOfMonth } from 'date-fns';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 export interface CashAlert {
   type: 'critical' | 'warning' | 'info';
@@ -23,7 +23,7 @@ export const useCashFlowAlerts = (
       t.origem === workspace && 
       !t.deletado &&
       t.recorrencia_ativa !== false &&
-      isWithinInterval(new Date(t.data), { start: monthStart, end: monthEnd })
+      isFinancialDateWithinRange(t.data, monthStart, monthEnd)
     );
 
     const alerts: CashAlert[] = [];
@@ -72,7 +72,7 @@ export const useCashFlowAlerts = (
       .filter(t => 
         t.tipo === 'saida' && 
         t.status === 'prevista' &&
-        isWithinInterval(new Date(t.data), { start: now, end: proximosDez })
+        isFinancialDateWithinRange(t.data, now, proximosDez)
       )
       .reduce((sum, t) => sum + t.valor, 0);
 

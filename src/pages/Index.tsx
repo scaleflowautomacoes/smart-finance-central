@@ -6,7 +6,6 @@ import TransactionForm from '@/components/TransactionForm';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import { Transaction } from '@/types/financial';
 import { DateRangeState, PresetName } from '@/components/DateRangeFilter';
-import { startOfMonth, endOfMonth } from 'date-fns';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
@@ -19,11 +18,10 @@ const Index = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
   
   const [dateRange, setDateRange] = useState<DateRangeState>(() => {
-    const now = new Date();
     const defaultRange: DateRangeState = {
-      startDate: startOfMonth(now),
-      endDate: endOfMonth(now),
-      presetName: 'este-mes'
+      startDate: undefined,
+      endDate: undefined,
+      presetName: 'tudo'
     };
     
     const saved = localStorage.getItem('financial-date-range');
@@ -33,7 +31,7 @@ const Index = () => {
         return {
           startDate: parsed.startDate ? new Date(parsed.startDate) : defaultRange.startDate,
           endDate: parsed.endDate ? new Date(parsed.endDate) : defaultRange.endDate,
-          presetName: parsed.presetName || 'este-mes'
+          presetName: parsed.presetName || 'tudo'
         };
       } catch (e) {
         console.error("Failed to parse financial-date-range from localStorage", e);
@@ -52,6 +50,9 @@ const Index = () => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    bulkUpdateTransactions,
+    bulkDeleteTransactions,
+    bulkCancelFutureRecurrences,
     addCategory,
     refreshData,
     setDateFilter
@@ -63,30 +64,37 @@ const Index = () => {
 
   // Aplicar filtro de datas ao carregar transações
   useEffect(() => {
+    if (dateRange.presetName === 'tudo') {
+      setDateFilter(undefined, undefined);
+      return;
+    }
+
     if (dateRange.startDate && dateRange.endDate) {
       setDateFilter(dateRange.startDate, dateRange.endDate);
+      return;
     }
+
+    setDateFilter(undefined, undefined);
   }, [dateRange, setDateFilter]);
 
   // Salvar no localStorage quando mudar
   useEffect(() => {
     localStorage.setItem('financial-date-range', JSON.stringify({
-      startDate: dateRange.startDate.toISOString(),
-      endDate: dateRange.endDate.toISOString(),
+      startDate: dateRange.startDate ? dateRange.startDate.toISOString() : null,
+      endDate: dateRange.endDate ? dateRange.endDate.toISOString() : null,
       presetName: dateRange.presetName
     }));
   }, [dateRange]);
 
-  const handleRangeChange = (start: Date, end: Date, presetName: PresetName) => {
+  const handleRangeChange = (start: Date | undefined, end: Date | undefined, presetName: PresetName) => {
     setDateRange({ startDate: start, endDate: end, presetName });
   };
 
   const handleClearFilter = () => {
-    const now = new Date();
     setDateRange({
-      startDate: startOfMonth(now),
-      endDate: endOfMonth(now),
-      presetName: 'este-mes'
+      startDate: undefined,
+      endDate: undefined,
+      presetName: 'tudo'
     });
   };
 
@@ -184,6 +192,7 @@ const Index = () => {
         
         <TransactionTable
           transactions={transactions}
+          categories={categories}
           workspace={currentWorkspace}
           dateRange={dateRange}
           onEdit={(transaction: Transaction) => {
@@ -191,6 +200,10 @@ const Index = () => {
             setShowForm(true);
           }}
           onDelete={deleteTransaction}
+          onBulkUpdate={bulkUpdateTransactions}
+          onBulkDelete={bulkDeleteTransactions}
+          onBulkCancelRecurrence={bulkCancelFutureRecurrences}
+          actionLoading={actionLoading}
           loading={loading}
         />
       </div>

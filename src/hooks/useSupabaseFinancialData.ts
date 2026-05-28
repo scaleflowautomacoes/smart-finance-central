@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DashboardMetrics } from '@/types/financial';
-import { isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import { useToastNotifications } from './useToastNotifications';
 import { useTransactions } from './useTransactions';
 import { useAuxiliaryData } from './useAuxiliaryData';
 import { claimUnownedTransactions, generateRecurrences } from '@/data/financial';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 // --- Funções de Cálculo (Mantidas) ---
 const calculateMetrics = (
@@ -23,8 +24,7 @@ const calculateMetrics = (
   const effectiveEndDate = endDate || endOfMonth(new Date());
   
   filteredTransactions = filteredTransactions.filter(t => {
-    const transactionDate = new Date(t.data);
-    return isWithinInterval(transactionDate, { start: effectiveStartDate, end: effectiveEndDate });
+    return isFinancialDateWithinRange(t.data, effectiveStartDate, effectiveEndDate);
   });
   
   const entradas = filteredTransactions.filter(t => t.tipo === 'entrada');
@@ -69,6 +69,9 @@ export const useSupabaseFinancialData = () => {
     addTransaction, 
     updateTransaction, 
     deleteTransaction,
+    bulkUpdateTransactions,
+    bulkDeleteTransactions,
+    bulkCancelFutureRecurrences,
     setDateFilter
   } = useTransactions();
   
@@ -133,6 +136,9 @@ export const useSupabaseFinancialData = () => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    bulkUpdateTransactions,
+    bulkDeleteTransactions,
+    bulkCancelFutureRecurrences,
     addCategory,
     refreshData,
     setDateFilter

@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Edit2, Trash2, Calendar, DollarSign, MoreVertical, Copy } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Edit2, Trash2, Calendar, DollarSign, MoreVertical, Copy, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Transaction } from '@/types/financial';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Transaction, Category } from '@/types/financial';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -14,22 +16,33 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { DateRangeState } from './DateRangeFilter';
 import TransactionFilters from './TransactionFilters';
 import RecurrenceIndicator from './RecurrenceIndicator';
+import { formatFinancialDate, isFinancialDateWithinRange, parseFinancialDate } from '@/utils/financialDate';
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  categories: Category[];
   workspace: 'PF' | 'PJ';
   dateRange: DateRangeState;
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
+  onBulkUpdate: (ids: string[], updates: Partial<Transaction>) => Promise<void>;
+  onBulkDelete: (ids: string[]) => Promise<void>;
+  onBulkCancelRecurrence: (parentIds: string[]) => Promise<void>;
+  actionLoading?: boolean;
   loading?: boolean;
 }
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
+  categories,
   workspace,
   dateRange,
   onEdit,
   onDelete,
+  onBulkUpdate,
+  onBulkDelete,
+  onBulkCancelRecurrence,
+  actionLoading = false,
   loading = false
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -38,6 +51,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [filterRecurrence, setFilterRecurrence] = useState<string>('all');
   const [filterPayment, setFilterPayment] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<string>('');
+  const [bulkPayment, setBulkPayment] = useState<string>('');
+  const [bulkCategory, setBulkCategory] = useState<string>('');
+  const [bulkDate, setBulkDate] = useState<string>('');
   
   const debouncedFilterStatus = useDebounce(filterStatus, 300);
   const debouncedFilterType = useDebounce(filterType, 300);
@@ -57,13 +75,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       if (debouncedFilterPayment !== 'all' && t.forma_pagamento !== debouncedFilterPayment) return false;
       if (debouncedSearchTerm && !t.nome.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) return false;
       
-      // Filter by period
-      if (dateRange.startDate && dateRange.endDate) {
-        const transactionDate = new Date(t.data);
-        if (transactionDate < dateRange.startDate || transactionDate > dateRange.endDate) return false;
-      }
-      
-      return true;
+      return isFinancialDateWithinRange(t.data, dateRange.startDate, dateRange.endDate);
     });
   }, [transactions, workspace, debouncedFilterStatus, debouncedFilterType, debouncedFilterCategory, debouncedFilterRecurrence, debouncedFilterPayment, debouncedSearchTerm, dateRange]);
 
@@ -77,6 +89,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const formatDate = useMemo(() => {
     return new Intl.DateTimeFormat('pt-BR');
   }, []);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [workspace, dateRange, debouncedFilterStatus, debouncedFilterType, debouncedFilterCategory, debouncedFilterRecurrence, debouncedFilterPayment, debouncedSearchTerm]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -111,9 +127,74 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     const duplicatedTransaction = {
       ...transaction,
       nome: `${transaction.nome} (Cópia)`,
-      data: new Date().toISOString().split('T')[0]
+      data: formatFinancialDate(new Date())
     };
     onEdit(duplicatedTransaction);
+  };
+
+  const toggleSelectAllVisible = (checked: boolean) => {
+    if (!checked) {
+      setSelectedIds(new Set());
+      return;
+    }
+
+    const newSelection = new Set(filteredTransactions.map((transaction) => transaction.id));
+    setSelectedIds(newSelection);
+  };
+
+  const toggleSelectOne = (transactionId: string, checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(transactionId);
+      } else {
+        next.delete(transactionId);
+      }
+      return next;
+    });
+  };
+
+  const selectedCount = selectedIds.size;
+  const allVisibleSelected = filteredTransactions.length > 0 && filteredTransactions.every((transaction) => selectedIds.has(transaction.id));
+
+  const clearBulkSelection = () => {
+    setSelectedIds(new Set());
+    setBulkStatus('');
+    setBulkPayment('');
+    setBulkCategory('');
+    setBulkDate('');
+  };
+
+  const applyBulkUpdate = async (updates: Partial<Transaction>) => {
+    if (selectedCount === 0) return;
+    await onBulkUpdate(Array.from(selectedIds), updates);
+    clearBulkSelection();
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedCount === 0) return;
+    if (!confirm(`Tem certeza que deseja excluir ${selectedCount} transações?`)) return;
+    await onBulkDelete(Array.from(selectedIds));
+    clearBulkSelection();
+  };
+
+  const handleBulkCancelRecurrence = async () => {
+    const parentIds = Array.from(
+      new Set(
+        filteredTransactions
+          .filter((transaction) => selectedIds.has(transaction.id))
+          .map((transaction) => transaction.is_recorrente ? transaction.id : transaction.recorrencia_transacao_pai_id)
+          .filter(Boolean) as string[]
+      )
+    );
+
+    if (parentIds.length === 0) {
+      alert('Nenhuma recorrência encontrada nas transações selecionadas.');
+      return;
+    }
+
+    await onBulkCancelRecurrence(parentIds);
+    clearBulkSelection();
   };
 
   const clearFilters = () => {
@@ -126,11 +207,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   };
 
   const uniqueCategories = useMemo(() => {
-    const categorySet = new Set(transactions
-      .filter(t => t.categoria_id && t.origem === workspace)
-      .map(t => t.categoria_id));
-    return Array.from(categorySet);
-  }, [transactions, workspace]);
+    return categories
+      .filter((category) => category.origem === workspace)
+      .map((category) => ({ id: category.id, nome: category.nome }));
+  }, [categories, workspace]);
 
   if (loading) {
     return (
@@ -180,6 +260,119 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       </CardHeader>
       
       <CardContent>
+        {selectedCount > 0 && (
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-blue-900">{selectedCount} selecionada(s)</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={clearBulkSelection}
+                disabled={actionLoading}
+              >
+                Limpar seleção
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleBulkDelete}
+                disabled={actionLoading}
+              >
+                Excluir em massa
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleBulkCancelRecurrence}
+                disabled={actionLoading}
+              >
+                <Ban className="h-4 w-4 mr-2" />
+                Retirar recorrência
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+              <div className="flex gap-2">
+                <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Alterar status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="prevista">Prevista</SelectItem>
+                    <SelectItem value="realizada">Realizada</SelectItem>
+                    <SelectItem value="vencida">Vencida</SelectItem>
+                    <SelectItem value="cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={() => applyBulkUpdate({ status: bulkStatus as Transaction['status'] })}
+                  disabled={!bulkStatus || actionLoading}
+                >
+                  Aplicar
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Select value={bulkPayment} onValueChange={setBulkPayment}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Forma pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                    <SelectItem value="cartao">Cartão</SelectItem>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={() => applyBulkUpdate({ forma_pagamento: bulkPayment as Transaction['forma_pagamento'] })}
+                  disabled={!bulkPayment || actionLoading}
+                >
+                  Aplicar
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {uniqueCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={() => applyBulkUpdate({ categoria_id: bulkCategory })}
+                  disabled={!bulkCategory || actionLoading}
+                >
+                  Aplicar
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={bulkDate}
+                  onChange={(event) => setBulkDate(event.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => applyBulkUpdate({ data: bulkDate })}
+                  disabled={!bulkDate || actionLoading}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -190,6 +383,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
+                  <th className="text-center py-3 px-2 font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={(event) => toggleSelectAllVisible(event.target.checked)}
+                    />
+                  </th>
                   <th className="text-left py-3 px-2 font-medium text-gray-700">Nome</th>
                   <th className="text-left py-3 px-2 font-medium text-gray-700">Tipo</th>
                   <th className="text-right py-3 px-2 font-medium text-gray-700">Valor</th>
@@ -203,6 +403,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <tbody>
                 {filteredTransactions.map((transaction) => (
                   <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(transaction.id)}
+                        onChange={(event) => toggleSelectOne(transaction.id, event.target.checked)}
+                      />
+                    </td>
                     <td className="py-3 px-2">
                       <div>
                         <div className="font-medium text-gray-900 flex items-center space-x-2">
@@ -227,7 +434,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     <td className="py-3 px-2">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3 text-gray-400" />
-                        <span className="text-sm">{formatDate.format(new Date(transaction.data))}</span>
+                        <span className="text-sm">{formatDate.format(parseFinancialDate(transaction.data))}</span>
                       </div>
                     </td>
                     <td className="py-3 px-2">

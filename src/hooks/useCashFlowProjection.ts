@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { format, addMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { format, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { isFinancialDateWithinRange, parseFinancialDate } from '@/utils/financialDate';
+import { isProjectedTransaction } from '@/utils/transactionStatus';
 
 export interface MonthlyProjection {
   monthLabel: string;
@@ -32,7 +34,7 @@ const calculateProjection = (
   // 2. Calcular o saldo real até o final do mês atual (para iniciar a projeção)
   const currentMonthEnd = endOfMonth(now);
   const currentMonthTransactions = activeTransactions.filter(t => 
-    new Date(t.data) <= currentMonthEnd
+    parseFinancialDate(t.data) <= currentMonthEnd
   );
 
   const entradasRealizadas = currentMonthTransactions
@@ -54,16 +56,15 @@ const calculateProjection = (
 
     // Filtrar transações previstas/recorrentes para este mês
     const monthTransactions = activeTransactions.filter(t => {
-      const transactionDate = new Date(t.data);
-      return isWithinInterval(transactionDate, { start: monthStart, end: monthEnd });
+      return isFinancialDateWithinRange(t.data, monthStart, monthEnd);
     });
 
     const receitasPrevistas = monthTransactions
-      .filter(t => t.tipo === 'entrada' && t.status !== 'realizada')
+      .filter(t => t.tipo === 'entrada' && isProjectedTransaction(t))
       .reduce((sum, t) => sum + t.valor, 0);
 
     const despesasPrevistas = monthTransactions
-      .filter(t => t.tipo === 'saida' && t.status !== 'realizada')
+      .filter(t => t.tipo === 'saida' && isProjectedTransaction(t))
       .reduce((sum, t) => sum + t.valor, 0);
       
     // Se for o mês atual, incluir as transações realizadas no cálculo do mês

@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Category } from '@/types/financial';
-import { startOfDay, endOfDay } from 'date-fns';
+import { formatFinancialDate } from '@/utils/financialDate';
 
 // --- Converters ---
 
@@ -51,13 +51,11 @@ export async function fetchTransactions(startDate?: Date, endDate?: Date): Promi
 
   // Aplicar filtro de data se fornecido
   if (startDate) {
-    const start = startOfDay(startDate);
-    query = query.gte('data', start.toISOString().split('T')[0]);
+    query = query.gte('data', formatFinancialDate(startDate));
   }
 
   if (endDate) {
-    const end = endOfDay(endDate);
-    query = query.lte('data', end.toISOString().split('T')[0]);
+    query = query.lte('data', formatFinancialDate(endDate));
   }
 
   const { data, error } = await query;
@@ -100,19 +98,7 @@ export async function createTransaction(transaction: Omit<Transaction, 'id' | 'd
 }
 
 export async function updateTransaction(id: string, updates: Partial<Transaction>): Promise<void> {
-  const updateData: any = {};
-  
-  // Mapeamento seguro de updates para o tipo Supabase
-  Object.keys(updates).forEach(key => {
-    const value = updates[key as keyof Partial<Transaction>];
-    if (value !== undefined) {
-      updateData[key] = (
-        (typeof value === 'string' && value.trim() === '') || (typeof value === 'number' && isNaN(value))
-          ? null
-          : value
-      );
-    }
-  });
+  const updateData = mapUpdateData(updates);
 
   const { error } = await supabase
     .from('transactions')
@@ -127,6 +113,59 @@ export async function softDeleteTransaction(id: string): Promise<void> {
     .from('transactions')
     .update({ deletado: true })
     .eq('id', id);
+
+  if (error) throw error;
+}
+
+const mapUpdateData = (updates: Partial<Transaction>): Record<string, unknown> => {
+  const updateData: Record<string, unknown> = {};
+
+  Object.keys(updates).forEach(key => {
+    const value = updates[key as keyof Partial<Transaction>];
+    if (value !== undefined) {
+      updateData[key] = (
+        (typeof value === 'string' && value.trim() === '') || (typeof value === 'number' && isNaN(value))
+          ? null
+          : value
+      );
+    }
+  });
+
+  return updateData;
+};
+
+export async function bulkUpdateTransactions(ids: string[], updates: Partial<Transaction>): Promise<void> {
+  if (ids.length === 0) return;
+
+  const updateData = mapUpdateData(updates);
+  if (Object.keys(updateData).length === 0) return;
+
+  const { error } = await supabase
+    .from('transactions')
+    .update(updateData)
+    .in('id', ids);
+
+  if (error) throw error;
+}
+
+export async function bulkSoftDeleteTransactions(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+
+  const { error } = await supabase
+    .from('transactions')
+    .update({ deletado: true })
+    .in('id', ids);
+
+  if (error) throw error;
+}
+
+export async function bulkCancelFutureRecurrences(parentIds: string[]): Promise<void> {
+  if (parentIds.length === 0) return;
+
+  const uniqueParentIds = Array.from(new Set(parentIds));
+  const { error } = await supabase.rpc('cancelar_recorrencias_em_lote', {
+    p_transacao_pai_ids: uniqueParentIds
+  });
 
   if (error) throw error;
 }
