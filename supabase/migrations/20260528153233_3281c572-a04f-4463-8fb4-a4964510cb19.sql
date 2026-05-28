@@ -1,0 +1,1 @@
+ALTER TABLE public.transactions ALTER COLUMN recorrencia_ativa DROP NOT NULL;

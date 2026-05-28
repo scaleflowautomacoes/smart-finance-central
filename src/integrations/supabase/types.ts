@@ -268,7 +268,7 @@ export type Database = {
           observacoes: string | null
           origem: string
           recorrencia: string | null
-          recorrencia_ativa: boolean
+          recorrencia_ativa: boolean | null
           recorrencia_ocorrencia_atual: number | null
           recorrencia_proxima_data: string | null
           recorrencia_tipo: string | null
@@ -295,7 +295,7 @@ export type Database = {
           observacoes?: string | null
           origem: string
           recorrencia?: string | null
-          recorrencia_ativa?: boolean
+          recorrencia_ativa?: boolean | null
           recorrencia_ocorrencia_atual?: number | null
           recorrencia_proxima_data?: string | null
           recorrencia_tipo?: string | null
@@ -322,7 +322,7 @@ export type Database = {
           observacoes?: string | null
           origem?: string
           recorrencia?: string | null
-          recorrencia_ativa?: boolean
+          recorrencia_ativa?: boolean | null
           recorrencia_ocorrencia_atual?: number | null
           recorrencia_proxima_data?: string | null
           recorrencia_tipo?: string | null
