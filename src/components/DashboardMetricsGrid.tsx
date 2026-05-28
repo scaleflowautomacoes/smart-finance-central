@@ -9,8 +9,8 @@ import { Transaction } from '@/types/financial'; // Adicionado
 interface DashboardMetricsGridProps {
   transactions: Transaction[];
   workspace: 'PF' | 'PJ';
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 const getVariationDisplay = (value: number, isPositiveGood: boolean) => {

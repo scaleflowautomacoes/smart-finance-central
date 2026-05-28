@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { isWithinInterval, subMonths, differenceInDays, startOfMonth, endOfMonth, subDays } from 'date-fns';
+import { differenceInDays, subDays } from 'date-fns';
 import { FinancialMetrics } from './useFinancialCalculations';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 interface ComparativeMetrics {
   current: FinancialMetrics;
@@ -16,15 +17,20 @@ interface ComparativeMetrics {
 const calculateMetrics = (
   transactions: Transaction[],
   workspace: 'PF' | 'PJ',
-  startDate: Date,
-  endDate: Date
+  startDate?: Date,
+  endDate?: Date
 ): FinancialMetrics => {
-  const filteredTransactions = transactions.filter(t => 
+  let filteredTransactions = transactions.filter(t => 
     t.origem === workspace && 
     !t.deletado &&
-    t.recorrencia_ativa !== false &&
-    isWithinInterval(new Date(t.data), { start: startDate, end: endDate })
+    t.recorrencia_ativa !== false
   );
+
+  if (startDate && endDate) {
+    filteredTransactions = filteredTransactions.filter(t =>
+      isFinancialDateWithinRange(t.data, startDate, endDate)
+    );
+  }
 
   const entradas = filteredTransactions.filter(t => t.tipo === 'entrada');
   const saidas = filteredTransactions.filter(t => t.tipo === 'saida');
@@ -72,25 +78,34 @@ const getPreviousPeriod = (startDate: Date, endDate: Date) => {
 export const useReportMetrics = (
   transactions: Transaction[],
   workspace: 'PF' | 'PJ',
-  startDate: Date,
-  endDate: Date
+  startDate?: Date,
+  endDate?: Date
 ): { metrics: ComparativeMetrics; loading: boolean } => {
   const metrics = useMemo(() => {
     const currentMetrics = calculateMetrics(transactions, workspace, startDate, endDate);
-    
-    const { previousStartDate, previousEndDate } = getPreviousPeriod(startDate, endDate);
-    const previousMetrics = calculateMetrics(transactions, workspace, previousStartDate, previousEndDate);
 
-    const calculateVariation = (current: number, previous: number) => {
-      if (previous === 0) return current > 0 ? 100 : 0;
-      return ((current - previous) / previous) * 100;
+    let previousMetrics = currentMetrics;
+    let variation: ComparativeMetrics['variation'] = {
+      entradas: 0,
+      saidas: 0,
+      saldo: 0,
     };
 
-    const variation: ComparativeMetrics['variation'] = {
-      entradas: calculateVariation(currentMetrics.totalEntradas, previousMetrics.totalEntradas),
-      saidas: calculateVariation(currentMetrics.totalSaidas, previousMetrics.totalSaidas),
-      saldo: calculateVariation(currentMetrics.saldoProjetado, previousMetrics.saldoProjetado),
-    };
+    if (startDate && endDate) {
+      const { previousStartDate, previousEndDate } = getPreviousPeriod(startDate, endDate);
+      previousMetrics = calculateMetrics(transactions, workspace, previousStartDate, previousEndDate);
+
+      const calculateVariation = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+      };
+
+      variation = {
+        entradas: calculateVariation(currentMetrics.totalEntradas, previousMetrics.totalEntradas),
+        saidas: calculateVariation(currentMetrics.totalSaidas, previousMetrics.totalSaidas),
+        saldo: calculateVariation(currentMetrics.saldoProjetado, previousMetrics.saldoProjetado),
+      };
+    }
 
     return {
       current: currentMetrics,

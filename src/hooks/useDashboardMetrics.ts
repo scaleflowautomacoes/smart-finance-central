@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Transaction, DashboardMetrics } from '@/types/financial';
-import { isWithinInterval, differenceInDays, subDays, startOfMonth, endOfMonth } from 'date-fns';
-import { FinancialMetrics } from './useFinancialCalculations';
+import { Transaction } from '@/types/financial';
+import { differenceInDays, subDays } from 'date-fns';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 interface DashboardSummaryMetrics {
   receitasPeriodo: number;
@@ -20,15 +20,20 @@ interface DashboardSummaryMetrics {
 const calculateMetrics = (
   transactions: Transaction[],
   workspace: 'PF' | 'PJ',
-  startDate: Date,
-  endDate: Date
+  startDate?: Date,
+  endDate?: Date
 ): { totalEntradas: number; totalSaidas: number; saldo: number; pendente: number } => {
-  const filteredTransactions = transactions.filter(t => 
+  let filteredTransactions = transactions.filter(t => 
     t.origem === workspace && 
     !t.deletado &&
-    t.recorrencia_ativa !== false &&
-    isWithinInterval(new Date(t.data), { start: startDate, end: endDate })
+    t.recorrencia_ativa !== false
   );
+
+  if (startDate && endDate) {
+    filteredTransactions = filteredTransactions.filter(t =>
+      isFinancialDateWithinRange(t.data, startDate, endDate)
+    );
+  }
 
   const entradasRealizadas = filteredTransactions
     .filter(t => t.tipo === 'entrada' && t.status === 'realizada')
@@ -84,18 +89,23 @@ const getHealthScore = (ratio: number): DashboardSummaryMetrics['healthScore'] =
 export const useDashboardMetrics = (
   transactions: Transaction[],
   workspace: 'PF' | 'PJ',
-  startDate: Date,
-  endDate: Date
+  startDate?: Date,
+  endDate?: Date
 ): { metrics: DashboardSummaryMetrics; loading: boolean } => {
   return useMemo(() => {
     const current = calculateMetrics(transactions, workspace, startDate, endDate);
-    const { previousStartDate, previousEndDate } = getPreviousPeriodDates(startDate, endDate);
-    const previous = calculateMetrics(transactions, workspace, previousStartDate, previousEndDate);
+    let receitasVariation = 0;
+    let despesasVariation = 0;
+    let saldoVariation = 0;
 
-    const receitasVariation = calculateVariation(current.totalEntradas, previous.totalEntradas);
-    const despesasVariation = calculateVariation(current.totalSaidas, previous.totalSaidas);
-    const saldoVariation = calculateVariation(current.saldo, previous.saldo);
-    
+    if (startDate && endDate) {
+      const { previousStartDate, previousEndDate } = getPreviousPeriodDates(startDate, endDate);
+      const previous = calculateMetrics(transactions, workspace, previousStartDate, previousEndDate);
+      receitasVariation = calculateVariation(current.totalEntradas, previous.totalEntradas);
+      despesasVariation = calculateVariation(current.totalSaidas, previous.totalSaidas);
+      saldoVariation = calculateVariation(current.saldo, previous.saldo);
+    }
+
     const despesasReceitasRatio = current.totalEntradas > 0 ? (current.totalSaidas / current.totalEntradas) * 100 : 0;
 
     return {

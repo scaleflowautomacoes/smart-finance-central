@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Transaction, Category } from '@/types/financial';
-import { isWithinInterval } from 'date-fns';
-import { FinancialMetrics } from './useFinancialCalculations';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 export interface DREMetrics {
   receitaBruta: number;
@@ -38,15 +37,20 @@ const calculateDRE = (
   transactions: Transaction[],
   categories: Category[],
   workspace: 'PF' | 'PJ',
-  startDate: Date,
-  endDate: Date
+  startDate?: Date,
+  endDate?: Date
 ): DREMetrics => {
-  const filteredTransactions = transactions.filter(t => 
+  let filteredTransactions = transactions.filter(t => 
     t.origem === workspace && 
     !t.deletado &&
-    t.status === 'realizada' && // DRE foca em valores realizados
-    isWithinInterval(new Date(t.data), { start: startDate, end: endDate })
+    t.status === 'realizada' // DRE foca em valores realizados
   );
+
+  if (startDate && endDate) {
+    filteredTransactions = filteredTransactions.filter(t =>
+      isFinancialDateWithinRange(t.data, startDate, endDate)
+    );
+  }
 
   let receitaBruta = 0;
   let deducoesImpostos = 0;
@@ -109,8 +113,8 @@ export const useProfitLoss = (
   transactions: Transaction[],
   categories: Category[],
   workspace: 'PF' | 'PJ',
-  startDate: Date,
-  endDate: Date
+  startDate?: Date,
+  endDate?: Date
 ) => {
   const dreMetrics = useMemo(() => {
     return calculateDRE(transactions, categories, workspace, startDate, endDate);

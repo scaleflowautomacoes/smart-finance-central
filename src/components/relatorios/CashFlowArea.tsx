@@ -4,37 +4,55 @@ import { Transaction } from '@/types/financial';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Briefcase } from 'lucide-react';
 import { formatCurrency, CHART_COLORS } from '@/utils/chartColors';
-import { format, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  compareFinancialDateStrings,
+  isFinancialDateWithinRange,
+  parseFinancialDate,
+} from '@/utils/financialDate';
 
 interface CashFlowAreaProps {
   transactions: Transaction[];
   workspace: 'PF' | 'PJ';
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 const CashFlowArea: React.FC<CashFlowAreaProps> = ({ transactions, workspace, startDate, endDate }) => {
   const chartData = useMemo(() => {
     const filteredTransactions = transactions.filter(t => {
       if (t.origem !== workspace || t.deletado || t.status !== 'realizada') return false;
-      const transactionDate = new Date(t.data);
-      return transactionDate >= startDate && transactionDate <= endDate;
+      return isFinancialDateWithinRange(t.data, startDate, endDate);
     });
 
-    const monthlyData: { [key: string]: { receitas: number; despesas: number } } = {};
-    
-    let current = startOfMonth(startDate);
-    const end = endOfMonth(endDate);
+    if (filteredTransactions.length === 0) {
+      return [];
+    }
 
-    while (current <= end) {
+    const sortedTransactions = [...filteredTransactions].sort((a, b) =>
+      compareFinancialDateStrings(a.data, b.data)
+    );
+
+    const monthlyData: { [key: string]: { receitas: number; despesas: number } } = {};
+
+    const rangeStart = startDate
+      ? startOfMonth(startDate)
+      : startOfMonth(parseFinancialDate(sortedTransactions[0].data));
+    const rangeEnd = endDate
+      ? endOfMonth(endDate)
+      : endOfMonth(parseFinancialDate(sortedTransactions[sortedTransactions.length - 1].data));
+
+    let current = rangeStart;
+
+    while (current <= rangeEnd) {
       const key = format(current, 'MMM/yy', { locale: ptBR });
       monthlyData[key] = { receitas: 0, despesas: 0 };
       current = startOfMonth(new Date(current.setMonth(current.getMonth() + 1)));
     }
 
     filteredTransactions.forEach(t => {
-      const monthKey = format(new Date(t.data), 'MMM/yy', { locale: ptBR });
+      const monthKey = format(parseFinancialDate(t.data), 'MMM/yy', { locale: ptBR });
       if (monthlyData[monthKey]) {
         if (t.tipo === 'entrada') {
           monthlyData[monthKey].receitas += t.valor;

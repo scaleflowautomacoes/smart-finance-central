@@ -29,15 +29,15 @@ const Lucro = () => {
     dateRange.endDate
   );
 
-  const handleRangeChange = (start: Date, end: Date, presetName: PresetName) => {
+  const handleRangeChange = (start: Date | undefined, end: Date | undefined, presetName: PresetName) => {
     setDateRange({ startDate: start, endDate: end, presetName });
   };
 
   const handleClearFilter = () => {
     setDateRange({
-      startDate: startOfYear(now),
-      endDate: endOfMonth(now),
-      presetName: 'custom'
+      startDate: undefined,
+      endDate: undefined,
+      presetName: 'tudo'
     });
   };
 

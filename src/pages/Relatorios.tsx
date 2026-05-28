@@ -29,16 +29,15 @@ const Relatorios = () => {
     dateRange.endDate
   );
 
-  const handleRangeChange = (start: Date, end: Date, presetName: PresetName) => {
+  const handleRangeChange = (start: Date | undefined, end: Date | undefined, presetName: PresetName) => {
     setDateRange({ startDate: start, endDate: end, presetName });
   };
 
   const handleClearFilter = () => {
-    const now = new Date();
     setDateRange({
-      startDate: startOfMonth(now),
-      endDate: endOfMonth(now),
-      presetName: 'este-mes'
+      startDate: undefined,
+      endDate: undefined,
+      presetName: 'tudo'
     });
   };
 

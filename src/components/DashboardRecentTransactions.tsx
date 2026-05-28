@@ -6,6 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { ArrowRight, DollarSign, Home, ShoppingCart, TrendingUp, Car, FolderOpen, Folder, FolderDot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { compareFinancialDateStrings, parseFinancialDate } from '@/utils/financialDate';
 
 interface DashboardRecentTransactionsProps {
   transactions: Transaction[];
@@ -34,7 +35,7 @@ const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsProps> = 
   const recentTransactions = useMemo(() => {
     return transactions
       .filter(t => t.origem === workspace && !t.deletado && t.status === 'realizada')
-      .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+      .sort((a, b) => compareFinancialDateStrings(b.data, a.data))
       .slice(0, 5);
   }, [transactions, workspace]);
   
@@ -73,7 +74,7 @@ const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsProps> = 
                     <div>
                       <p className="font-medium text-foreground">{t.nome}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(t.data), 'dd/MM/yyyy', { locale: ptBR })}
+                        {format(parseFinancialDate(t.data), 'dd/MM/yyyy', { locale: ptBR })}
                       </p>
                     </div>
                   </div>

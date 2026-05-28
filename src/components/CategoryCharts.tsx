@@ -5,14 +5,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Transaction, Category } from '@/types/financial';
 import { CHART_COLORS, getRandomCategoryColor, formatCurrency } from '@/utils/chartColors';
 import { useTheme } from 'next-themes';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 interface CategoryChartsProps {
   transactions: Transaction[];
   categories: Category[];
   workspace: 'PF' | 'PJ';
   dateRange: {
-    startDate: Date;
-    endDate: Date;
+    startDate?: Date;
+    endDate?: Date;
   };
 }
 
@@ -30,13 +31,7 @@ const CategoryCharts: React.FC<CategoryChartsProps> = ({
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       if (t.deletado || t.origem !== workspace) return false;
-      
-      if (dateRange.startDate && dateRange.endDate) {
-        const transactionDate = new Date(t.data);
-        if (transactionDate < dateRange.startDate || transactionDate > dateRange.endDate) return false;
-      }
-      
-      return true;
+      return isFinancialDateWithinRange(t.data, dateRange.startDate, dateRange.endDate);
     });
   }, [transactions, workspace, dateRange]);
 

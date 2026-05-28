@@ -18,6 +18,7 @@ import { useTheme } from 'next-themes';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { parseFinancialDate } from '@/utils/financialDate';
 
 interface MonthlyTrendChartProps {
   transactions: Transaction[];
@@ -53,7 +54,7 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ transactions, wor
         if (t.origem !== workspace || t.deletado || t.recorrencia_ativa === false) {
           return false;
         }
-        const transactionDate = new Date(t.data);
+        const transactionDate = parseFinancialDate(t.data);
         return isWithinInterval(transactionDate, { start: monthStart, end: monthEnd });
       });
 

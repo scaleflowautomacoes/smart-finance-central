@@ -11,6 +11,7 @@ import { Transaction, Category, Client } from '@/types/financial';
 import QuickFillButtons from './QuickFillButtons';
 import RecurrenceConfig from './RecurrenceConfig';
 import RecurrenceManager from './RecurrenceManager';
+import { getTodayFinancialDate } from '@/utils/financialDate';
 
 interface TransactionFormProps {
   transaction?: Transaction;
@@ -35,7 +36,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     nome: '',
     tipo: 'entrada' as 'entrada' | 'saida',
     valor: '',
-    data: new Date().toISOString().split('T')[0],
+    data: getTodayFinancialDate(),
     origem: workspace,
     forma_pagamento: 'pix' as 'pix' | 'boleto' | 'cartao' | 'dinheiro',
     status: 'prevista' as 'prevista' | 'realizada' | 'vencida' | 'cancelada',

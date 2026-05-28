@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Calendar, CheckCircle, Clock, Pause } from 'lucide-react';
 import { Transaction } from '@/types/financial';
+import { daysUntilFinancialDate } from '@/utils/financialDate';
 
 interface RecurrenceInfoProps {
   transactions: Transaction[];
@@ -33,7 +34,7 @@ const RecurrenceInfo: React.FC<RecurrenceInfoProps> = ({
   const futureTransactions = workspaceTransactions.filter(t => 
     t.recorrencia_transacao_pai_id && 
     t.status === 'prevista' && 
-    new Date(t.data) > new Date()
+    daysUntilFinancialDate(t.data) > 0
   );
 
   if (parentRecurrences.length === 0) {

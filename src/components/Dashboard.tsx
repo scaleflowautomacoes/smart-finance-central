@@ -13,7 +13,7 @@ interface DashboardProps {
   transactions: Transaction[];
   categories: Category[];
   dateRange: DateRangeState;
-  onRangeChange: (start: Date, end: Date, presetName: PresetName) => void;
+  onRangeChange: (start: Date | undefined, end: Date | undefined, presetName: PresetName) => void;
   onClearFilter: () => void;
   loading?: boolean;
   onRefreshData?: () => void;

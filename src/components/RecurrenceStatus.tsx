@@ -7,6 +7,7 @@ import { RefreshCw, Calendar, AlertCircle, CheckCircle, Clock, Pause } from 'luc
 import { Transaction } from '@/types/financial';
 import { supabase } from '@/integrations/supabase/client';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
+import { daysUntilFinancialDate } from '@/utils/financialDate';
 
 interface RecurrenceStatusProps {
   transactions: Transaction[];
@@ -48,7 +49,7 @@ const RecurrenceStatus: React.FC<RecurrenceStatusProps> = ({
   // Transações futuras previstas
   const futureTransactions = childTransactions.filter(t => 
     t.status === 'prevista' && 
-    new Date(t.data) > new Date()
+    daysUntilFinancialDate(t.data) > 0
   );
 
   // Transações vencidas por recorrência

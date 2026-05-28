@@ -7,11 +7,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 
-export type PresetName = 'hoje' | 'ontem' | '7dias' | 'este-mes' | 'mes-passado' | 'este-ano' | 'custom';
+export type PresetName = 'tudo' | 'hoje' | 'ontem' | '7dias' | 'este-mes' | 'mes-passado' | 'este-ano' | 'custom';
 
 export interface DateRangeState {
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
   presetName: PresetName;
 }
 
@@ -19,14 +19,14 @@ interface DateRangeFilterProps {
   startDate?: Date;
   endDate?: Date;
   presetName?: PresetName;
-  onRangeChange: (start: Date, end: Date, presetName: PresetName) => void;
+  onRangeChange: (start: Date | undefined, end: Date | undefined, presetName: PresetName) => void;
   onClear: () => void;
 }
 
 interface Preset {
   name: PresetName;
   label: string;
-  getRange: () => { start: Date; end: Date };
+  getRange: () => { start?: Date; end?: Date };
 }
 
 const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
@@ -48,6 +48,11 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   }, []);
 
   const presets: Preset[] = [
+    {
+      name: 'tudo',
+      label: 'Tudo',
+      getRange: () => ({ start: undefined, end: undefined }),
+    },
     {
       name: 'hoje',
       label: 'Hoje',
@@ -127,7 +132,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   };
 
   const formatRange = (start?: Date, end?: Date) => {
-    if (!start || !end) return 'Selecionar período';
+    if (!start || !end) return 'Tudo';
     
     const startStr = format(start, 'dd/MM/yy', { locale: ptBR });
     const endStr = format(end, 'dd/MM/yy', { locale: ptBR });
@@ -222,7 +227,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
             className="w-full min-h-[44px] justify-center"
           >
             <X className="mr-2 h-4 w-4" />
-            Limpar filtro (Este mês)
+            Limpar filtro (Tudo)
           </Button>
         </div>
       </PopoverContent>

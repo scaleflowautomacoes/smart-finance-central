@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Transaction } from '@/types/financial';
 import { format, addMonths, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { compareFinancialDateStrings, parseFinancialDate } from '@/utils/financialDate';
 
 interface UpcomingTransactionsProps {
   transactions: Transaction[];
@@ -31,9 +32,9 @@ const UpcomingTransactions: React.FC<UpcomingTransactionsProps> = ({
     return transactions.filter(t => {
       if (t.deletado || t.origem !== workspace) return false;
       
-      const transactionDate = new Date(t.data);
+      const transactionDate = parseFinancialDate(t.data);
       return isWithinInterval(transactionDate, { start: startDate, end: endDate });
-    }).sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    }).sort((a, b) => compareFinancialDateStrings(a.data, b.data));
   }, [transactions, workspace]);
 
   const summary = useMemo(() => {
@@ -124,7 +125,7 @@ const UpcomingTransactions: React.FC<UpcomingTransactionsProps> = ({
                   <div>
                     <div className="font-medium text-gray-900">{transaction.nome}</div>
                     <div className="text-sm text-gray-500">
-                      {format(new Date(transaction.data), 'dd/MM/yyyy', { locale: ptBR })}
+                      {format(parseFinancialDate(transaction.data), 'dd/MM/yyyy', { locale: ptBR })}
                     </div>
                   </div>
                 </div>

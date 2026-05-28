@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { FinancialMetrics } from "@/hooks/useFinancialCalculations";
 import { Transaction } from "@/types/financial";
 import { CalendarDays, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { daysUntilFinancialDate } from "@/utils/financialDate";
 
 interface FinancialSummaryProps {
   metrics: FinancialMetrics;
@@ -29,8 +30,7 @@ export function FinancialSummary({ metrics, transactions, workspace }: Financial
   );
   
   const proximasVencer = transactions.filter(t => {
-    const transactionDate = new Date(t.data);
-    const diffDays = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = daysUntilFinancialDate(t.data, today);
     return t.origem === workspace && 
            t.status === 'prevista' && 
            !t.deletado && 

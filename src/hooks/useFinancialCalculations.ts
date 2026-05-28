@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { isWithinInterval } from 'date-fns';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 export interface FinancialMetrics {
   entradasRealizadas: number;
@@ -30,8 +30,7 @@ export const useFinancialCalculations = (
 
     if (startDate && endDate) {
       filteredTransactions = filteredTransactions.filter(t => {
-        const transactionDate = new Date(t.data);
-        return isWithinInterval(transactionDate, { start: startDate, end: endDate });
+        return isFinancialDateWithinRange(t.data, startDate, endDate);
       });
     }
 

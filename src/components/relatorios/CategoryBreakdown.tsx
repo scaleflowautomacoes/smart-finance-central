@@ -4,13 +4,14 @@ import { Transaction, Category } from '@/types/financial';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend, Cell } from 'recharts';
 import { ListOrdered, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency, getRandomCategoryColor } from '@/utils/chartColors';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 interface CategoryBreakdownProps {
   transactions: Transaction[];
   categories: Category[];
   workspace: 'PF' | 'PJ';
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ 
@@ -23,8 +24,7 @@ const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({
   const data = useMemo(() => {
     const filteredTransactions = transactions.filter(t => {
       if (t.origem !== workspace || t.deletado || t.status !== 'realizada') return false;
-      const transactionDate = new Date(t.data);
-      return transactionDate >= startDate && transactionDate <= endDate;
+      return isFinancialDateWithinRange(t.data, startDate, endDate);
     });
 
     const categoryMap: { [key: string]: { name: string; entrada: number; saida: number } } = {};
