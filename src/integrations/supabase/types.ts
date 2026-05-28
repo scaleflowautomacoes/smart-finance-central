@@ -14,13 +14,379 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          limite_mensal: number | null
+          nome: string
+          origem: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          limite_mensal?: number | null
+          nome: string
+          origem: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          limite_mensal?: number | null
+          nome?: string
+          origem?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      debts: {
+        Row: {
+          created_at: string
+          creditor: string
+          due_date: string
+          id: string
+          installments_paid: number
+          installments_total: number
+          interest_rate: number
+          name: string
+          payment_day: number
+          remaining_amount: number
+          status: string
+          total_amount: number
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          created_at?: string
+          creditor: string
+          due_date: string
+          id?: string
+          installments_paid?: number
+          installments_total?: number
+          interest_rate?: number
+          name: string
+          payment_day?: number
+          remaining_amount?: number
+          status?: string
+          total_amount?: number
+          user_id: string
+          workspace?: string
+        }
+        Update: {
+          created_at?: string
+          creditor?: string
+          due_date?: string
+          id?: string
+          installments_paid?: number
+          installments_total?: number
+          interest_rate?: number
+          name?: string
+          payment_day?: number
+          remaining_amount?: number
+          status?: string
+          total_amount?: number
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          current_amount: number
+          deadline: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          target_amount: number
+          type: string
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          current_amount?: number
+          deadline: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          target_amount?: number
+          type?: string
+          user_id: string
+          workspace?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          current_amount?: number
+          deadline?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          target_amount?: number
+          type?: string
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          created_at: string
+          current_amount: number
+          expected_return: number
+          id: string
+          initial_amount: number
+          name: string
+          purchase_date: string
+          status: string
+          type: string
+          user_id: string
+          workspace: string
+        }
+        Insert: {
+          created_at?: string
+          current_amount?: number
+          expected_return?: number
+          id?: string
+          initial_amount?: number
+          name: string
+          purchase_date: string
+          status?: string
+          type?: string
+          user_id: string
+          workspace?: string
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          expected_return?: number
+          id?: string
+          initial_amount?: number
+          name?: string
+          purchase_date?: string
+          status?: string
+          type?: string
+          user_id?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
+      maintenances: {
+        Row: {
+          cost: number
+          created_at: string
+          date_performed: string
+          description: string | null
+          id: string
+          km_performed: number
+          next_date: string | null
+          next_km: number | null
+          type: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          date_performed: string
+          description?: string | null
+          id?: string
+          km_performed?: number
+          next_date?: string | null
+          next_km?: number | null
+          type?: string
+          user_id: string
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          date_performed?: string
+          description?: string | null
+          id?: string
+          km_performed?: number
+          next_date?: string | null
+          next_km?: number | null
+          type?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenances_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      responsaveis: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          tipo?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          categoria_id: string | null
+          cliente_id: string | null
+          created_at: string
+          data: string
+          deletado: boolean
+          dependencia: string | null
+          forma_pagamento: string
+          id: string
+          is_recorrente: boolean
+          nome: string
+          observacoes: string | null
+          origem: string
+          recorrencia: string | null
+          recorrencia_ativa: boolean
+          recorrencia_ocorrencia_atual: number | null
+          recorrencia_proxima_data: string | null
+          recorrencia_tipo: string | null
+          recorrencia_total_ocorrencias: number | null
+          recorrencia_transacao_pai_id: string | null
+          status: string
+          subcategoria_id: string | null
+          tipo: string
+          updated_at: string
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          categoria_id?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data: string
+          deletado?: boolean
+          dependencia?: string | null
+          forma_pagamento: string
+          id?: string
+          is_recorrente?: boolean
+          nome: string
+          observacoes?: string | null
+          origem: string
+          recorrencia?: string | null
+          recorrencia_ativa?: boolean
+          recorrencia_ocorrencia_atual?: number | null
+          recorrencia_proxima_data?: string | null
+          recorrencia_tipo?: string | null
+          recorrencia_total_ocorrencias?: number | null
+          recorrencia_transacao_pai_id?: string | null
+          status?: string
+          subcategoria_id?: string | null
+          tipo: string
+          updated_at?: string
+          user_id?: string | null
+          valor?: number
+        }
+        Update: {
+          categoria_id?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data?: string
+          deletado?: boolean
+          dependencia?: string | null
+          forma_pagamento?: string
+          id?: string
+          is_recorrente?: boolean
+          nome?: string
+          observacoes?: string | null
+          origem?: string
+          recorrencia?: string | null
+          recorrencia_ativa?: boolean
+          recorrencia_ocorrencia_atual?: number | null
+          recorrencia_proxima_data?: string | null
+          recorrencia_tipo?: string | null
+          recorrencia_total_ocorrencias?: number | null
+          recorrencia_transacao_pai_id?: string | null
+          status?: string
+          subcategoria_id?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          brand: string | null
+          created_at: string
+          current_km: number
+          id: string
+          model: string | null
+          name: string
+          plate: string | null
+          user_id: string
+          workspace: string
+          year: number | null
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          current_km?: number
+          id?: string
+          model?: string | null
+          name: string
+          plate?: string | null
+          user_id: string
+          workspace?: string
+          year?: number | null
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          current_km?: number
+          id?: string
+          model?: string | null
+          name?: string
+          plate?: string | null
+          user_id?: string
+          workspace?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_unowned_transactions: { Args: never; Returns: number }
+      gerar_proximas_transacoes_recorrentes: { Args: never; Returns: undefined }
+      gerenciar_recorrencia: {
+        Args: { p_acao: string; p_transacao_pai_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
