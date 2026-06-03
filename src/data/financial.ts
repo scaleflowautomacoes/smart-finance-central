@@ -102,7 +102,7 @@ export async function updateTransaction(id: string, updates: Partial<Transaction
 
   const { error } = await supabase
     .from('transactions')
-    .update(updateData)
+    .update(updateData as never)
     .eq('id', id);
 
   if (error) throw error;
@@ -142,7 +142,7 @@ export async function bulkUpdateTransactions(ids: string[], updates: Partial<Tra
 
   const { error } = await supabase
     .from('transactions')
-    .update(updateData)
+    .update(updateData as never)
     .in('id', ids);
 
   if (error) throw error;
@@ -163,9 +163,9 @@ export async function bulkCancelFutureRecurrences(parentIds: string[]): Promise<
   if (parentIds.length === 0) return;
 
   const uniqueParentIds = Array.from(new Set(parentIds));
-  const { error } = await supabase.rpc('cancelar_recorrencias_em_lote', {
+  const { error } = await supabase.rpc('cancelar_recorrencias_em_lote' as never, {
     p_transacao_pai_ids: uniqueParentIds
-  });
+  } as never);
 
   if (error) throw error;
 }
