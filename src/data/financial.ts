@@ -102,7 +102,7 @@ export async function updateTransaction(id: string, updates: Partial<Transaction
 
   const { error } = await supabase
     .from('transactions')
-    .update(updateData)
+    .update(updateData as never)
     .eq('id', id);
 
   if (error) throw error;
