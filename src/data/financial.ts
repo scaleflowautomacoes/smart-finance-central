@@ -163,9 +163,9 @@ export async function bulkCancelFutureRecurrences(parentIds: string[]): Promise<
   if (parentIds.length === 0) return;
 
   const uniqueParentIds = Array.from(new Set(parentIds));
-  const { error } = await supabase.rpc('cancelar_recorrencias_em_lote', {
+  const { error } = await supabase.rpc('cancelar_recorrencias_em_lote' as never, {
     p_transacao_pai_ids: uniqueParentIds
-  });
+  } as never);
 
   if (error) throw error;
 }
