@@ -142,7 +142,7 @@ export async function bulkUpdateTransactions(ids: string[], updates: Partial<Tra
 
   const { error } = await supabase
     .from('transactions')
-    .update(updateData)
+    .update(updateData as never)
     .in('id', ids);
 
   if (error) throw error;
