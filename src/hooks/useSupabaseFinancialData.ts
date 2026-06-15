@@ -4,6 +4,7 @@ import { useTransactions } from './useTransactions';
 import { useAuxiliaryData } from './useAuxiliaryData';
 import { claimUnownedTransactions, generateRecurrences } from '@/data/financial';
 import { calculateFinancialMetrics } from './useFinancialMetricsCore';
+import { DashboardMetrics } from '@/types/financial';
 
 export const useSupabaseFinancialData = () => {
   const { showSuccess } = useToastNotifications();
@@ -71,6 +72,30 @@ export const useSupabaseFinancialData = () => {
   const refreshData = useCallback(async () => {
     await Promise.all([loadTransactions(), loadAuxiliaryData()]);
   }, [loadTransactions, loadAuxiliaryData]);
+
+  const calculateMetrics = useCallback((
+    transactions: any[],
+    origem: 'PF' | 'PJ',
+    startDate?: Date,
+    endDate?: Date
+  ): DashboardMetrics => {
+    const metrics = calculateFinancialMetrics({
+      transactions,
+      workspace: origem,
+      startDate,
+      endDate,
+      includeVencidas: true,
+    });
+
+    return {
+      entradasPrevistas: metrics.entradasPrevistas,
+      entradasRealizadas: metrics.entradasRealizadas,
+      saidasPrevistas: metrics.saidasPrevistas,
+      saidasPagas: metrics.saidasRealizadas,
+      saldoProjetado: metrics.saldoProjetado,
+      saldoReal: metrics.saldoReal,
+    };
+  }, []);
 
   return {
     transactions,
