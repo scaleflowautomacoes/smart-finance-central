@@ -53,7 +53,7 @@ export const ImprovedRecentTransactions: React.FC<ImprovedRecentTransactionsProp
 
   if (!hasCritical && !hasRecent) {
     return (
-      <Card className={cn('border-0 shadow-md bg-card', className)}>
+      <Card variant="soft" className={cn('shadow-sm', className)}>
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
             Transações
@@ -72,7 +72,7 @@ export const ImprovedRecentTransactions: React.FC<ImprovedRecentTransactionsProp
     <div className={cn('space-y-4', className)}>
       {/* Transações que exigem atenção */}
       {hasCritical && (
-        <Card className="border-0 shadow-md bg-card">
+        <Card variant="soft" className="shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-warning" />
@@ -97,7 +97,7 @@ export const ImprovedRecentTransactions: React.FC<ImprovedRecentTransactionsProp
 
       {/* Últimas transações realizadas */}
       {hasRecent && (
-        <Card className="border-0 shadow-md bg-card">
+        <Card variant="soft" className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold text-foreground">
               Últimas Transações

@@ -10,16 +10,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  compact?: boolean
+  className?: string
+}
+
+export function ThemeToggle({ compact = false, className }: ThemeToggleProps) {
   const { setTheme } = useTheme()
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="w-full justify-start">
-          <Sun className="h-4 w-4 mr-3 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 mr-3 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="ml-3">Tema</span>
+        <Button
+          variant="ghost"
+          size={compact ? "icon" : "sm"}
+          className={className ?? (compact ? "" : "w-full justify-start")}
+        >
+          <Sun className={`h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 ${compact ? "" : "mr-3"}`} />
+          <Moon className={`absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 ${compact ? "" : "mr-3"}`} />
+          {!compact && <span className="ml-3">Tema</span>}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

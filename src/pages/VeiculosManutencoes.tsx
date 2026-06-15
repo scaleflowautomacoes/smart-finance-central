@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Car, Plus, Wrench, Edit, Trash2 } from 'lucide-react';
+import { Car, Plus, Edit, Trash2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVehicles } from '@/hooks/useVehicles';
 import { Vehicle, Maintenance } from '@/types/financial';
@@ -143,20 +143,32 @@ const VeiculosManutencoes = () => {
       onWorkspaceChange={setCurrentWorkspace}
       onNewTransaction={() => setShowVehicleForm(true)}
     >
-      <div className="p-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold flex items-center space-x-3">
-            <Car className="h-7 w-7 text-primary" />
-            <span>Veículos e Manutenções ({currentWorkspace})</span>
-          </h1>
-          <Button onClick={() => { setEditingVehicle(undefined); setShowVehicleForm(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Veículo
-          </Button>
-        </div>
+      <div className="space-y-6 p-4 lg:p-6">
+        <Card variant="glass" className="overflow-hidden">
+          <CardContent className="p-5 lg:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  Frota e manutenção
+                </div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+                  Veículos e Manutenções
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  Visão centralizada da frota, histórico de manutenção e eventos operacionais em uma única superfície.
+                </p>
+              </div>
+              <Button onClick={() => { setEditingVehicle(undefined); setShowVehicleForm(true); }} className="rounded-xl shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Veículo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-surface/80 p-1">
             <TabsTrigger value="vehicles">Veículos ({workspaceVehicles.length})</TabsTrigger>
             <TabsTrigger value="maintenances">Manutenções ({workspaceMaintenances.length})</TabsTrigger>
           </TabsList>
@@ -186,7 +198,7 @@ const VeiculosManutencoes = () => {
           </TabsContent>
           
           <TabsContent value="maintenances" className="mt-6">
-            <Card>
+            <Card variant="soft">
               <CardHeader className="flex flex-row justify-between items-center">
                 <CardTitle className="text-lg">Histórico de Manutenções</CardTitle>
                 <Button size="sm" onClick={() => handleAddMaintenance()}>

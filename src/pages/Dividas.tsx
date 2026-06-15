@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scale, Plus, DollarSign, Calendar, AlertTriangle, Edit } from 'lucide-react';
+import { Scale, Plus, DollarSign, Calendar, AlertTriangle, Edit, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDebts } from '@/hooks/useDebts';
 import { Debt } from '@/types/financial';
@@ -104,17 +104,29 @@ const Dividas = () => {
       onWorkspaceChange={setCurrentWorkspace}
       onNewTransaction={() => setShowForm(true)}
     >
-      <div className="p-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold flex items-center space-x-3">
-            <Scale className="h-7 w-7 text-primary" />
-            <span>Dívidas ({currentWorkspace})</span>
-          </h1>
-          <Button onClick={() => { setEditingDebt(undefined); setShowForm(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Dívida
-          </Button>
-        </div>
+      <div className="space-y-6 p-4 lg:p-6">
+        <Card variant="glass" className="overflow-hidden">
+          <CardContent className="p-5 lg:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  Passivos e cobrança
+                </div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+                  Dívidas
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  Controle de vencimentos, saldo restante e risco de inadimplência com leitura rápida do quadro.
+                </p>
+              </div>
+              <Button onClick={() => { setEditingDebt(undefined); setShowForm(true); }} className="rounded-xl shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Dívida
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {loading ? (
           <LoadingSpinner text="Carregando dívidas..." />
@@ -122,15 +134,15 @@ const Dividas = () => {
           <>
             {/* Resumo das Dívidas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+              <Card variant="soft">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-primary flex items-center space-x-1">
                     <DollarSign className="h-4 w-4" />
                     Total Devido
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {formatCurrency(summary.remainingAmount)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -139,15 +151,15 @@ const Dividas = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+              <Card variant="soft">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-warning flex items-center space-x-1">
                     <Calendar className="h-4 w-4" />
                     Próximo Vencimento
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.nextDueDate}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -156,15 +168,15 @@ const Dividas = () => {
                 </CardContent>
               </Card>
               
-              <Card className={`${summary.lateCount > 0 ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' : 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'}`}>
+              <Card variant="soft" className={summary.lateCount > 0 ? 'border-error/20' : 'border-success/20'}>
                 <CardHeader className="pb-2">
-                  <CardTitle className={`text-sm font-medium ${summary.lateCount > 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'} flex items-center space-x-1`}>
+                  <CardTitle className={`text-sm font-medium ${summary.lateCount > 0 ? 'text-error' : 'text-success'} flex items-center space-x-1`}>
                     <AlertTriangle className="h-4 w-4" />
                     Dívidas Atrasadas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${summary.lateCount > 0 ? 'text-red-800 dark:text-red-300' : 'text-green-800 dark:text-green-300'}`}>
+                  <div className={`text-2xl font-bold ${summary.lateCount > 0 ? 'text-error' : 'text-success'}`}>
                     {summary.lateCount}
                   </div>
                   <p className="text-xs text-muted-foreground">

@@ -18,10 +18,10 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   contentClassName,
 }) => {
   return (
-    <Card className={cn('border-0 shadow-md bg-card', className)}>
-      <CardHeader className="pb-2">
+    <Card variant="soft" className={cn('overflow-hidden', className)}>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-foreground">
+          <CardTitle className="text-base font-semibold tracking-tight text-foreground lg:text-lg">
             {title}
           </CardTitle>
           {headerRight}

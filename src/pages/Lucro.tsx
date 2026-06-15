@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import { Briefcase, Filter } from 'lucide-react';
+import { Briefcase, Filter, LineChart } from 'lucide-react';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DateRangeFilter, { DateRangeState, PresetName } from '@/components/DateRangeFilter';
@@ -59,14 +59,22 @@ const Lucro = () => {
       onWorkspaceChange={setCurrentWorkspace}
       onNewTransaction={() => {}}
     >
-      <div className="p-4 space-y-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
-          <h1 className="text-3xl font-bold flex items-center space-x-3">
-            <Briefcase className="h-7 w-7 text-primary" />
-            <span>Demonstrativo de Resultado (DRE) ({currentWorkspace})</span>
-          </h1>
-          
-          <div className="flex items-center space-x-3">
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <LineChart className="h-4 w-4" />
+              Resultado e margem
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+              Demonstrativo de Resultado (DRE)
+            </h1>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Leitura executiva do resultado, com filtro temporal e foco em rentabilidade, estrutura e tendência.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <DateRangeFilter
               startDate={dateRange.startDate}

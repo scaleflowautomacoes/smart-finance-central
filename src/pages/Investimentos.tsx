@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Plus, TrendingUp, Zap } from 'lucide-react';
+import { DollarSign, Plus, TrendingUp, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInvestments } from '@/hooks/useInvestments';
 import { Investment } from '@/types/financial';
@@ -88,17 +88,29 @@ const Investimentos = () => {
       onWorkspaceChange={setCurrentWorkspace}
       onNewTransaction={() => setShowForm(true)}
     >
-      <div className="p-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold flex items-center space-x-3">
-            <DollarSign className="h-7 w-7 text-primary" />
-            <span>Investimentos e Carteira ({currentWorkspace})</span>
-          </h1>
-          <Button onClick={() => { setEditingInvestment(undefined); setShowForm(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Ativo
-          </Button>
-        </div>
+      <div className="space-y-6 p-4 lg:p-6">
+        <Card variant="glass" className="overflow-hidden">
+          <CardContent className="p-5 lg:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  Carteira e performance
+                </div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+                  Investimentos e Carteira
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  Visão consolidada dos ativos, rentabilidade e distribuição de capital com leitura executiva.
+                </p>
+              </div>
+              <Button onClick={() => { setEditingInvestment(undefined); setShowForm(true); }} className="rounded-xl shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Ativo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {loading ? (
           <LoadingSpinner text="Carregando carteira..." />
@@ -106,15 +118,15 @@ const Investimentos = () => {
           <>
             {/* Resumo da Carteira */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-l-4 border-l-blue-500 dark:bg-blue-900/20 dark:border-blue-800">
+              <Card variant="soft">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-primary flex items-center space-x-1">
                     <DollarSign className="h-4 w-4" />
                     Valor Atual da Carteira
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {formatCurrency(summary.totalCurrent)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -123,7 +135,7 @@ const Investimentos = () => {
                 </CardContent>
               </Card>
               
-              <Card className={`border-l-4 ${summary.profitLoss >= 0 ? 'border-l-success' : 'border-l-error'} dark:bg-green-900/20 dark:border-green-800`}>
+              <Card variant="soft" className={summary.profitLoss >= 0 ? 'border-success/20' : 'border-error/20'}>
                 <CardHeader className="pb-2">
                   <CardTitle className={`text-sm font-medium ${summary.profitLoss >= 0 ? 'text-success' : 'text-error'} flex items-center space-x-1`}>
                     <TrendingUp className="h-4 w-4" />
@@ -131,7 +143,7 @@ const Investimentos = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${summary.profitLoss >= 0 ? 'text-success dark:text-green-300' : 'text-error dark:text-red-300'}`}>
+                  <div className={`text-2xl font-bold ${summary.profitLoss >= 0 ? 'text-success' : 'text-error'}`}>
                     {formatCurrency(summary.profitLoss)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -140,15 +152,15 @@ const Investimentos = () => {
                 </CardContent>
               </Card>
               
-              <Card className="border-l-4 border-l-purple-500 dark:bg-purple-900/20 dark:border-purple-800">
+              <Card variant="soft">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-primary flex items-center space-x-1">
                     <Zap className="h-4 w-4" />
                     Total de Ativos
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-800 dark:text-purple-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {workspaceInvestments.length}
                   </div>
                   <p className="text-xs text-muted-foreground">

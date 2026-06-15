@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, Plus, DollarSign, Clock, CheckCircle, Edit } from 'lucide-react';
+import { Target, Plus, DollarSign, Clock, CheckCircle, Edit, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGoals } from '@/hooks/useGoals';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
@@ -97,17 +97,29 @@ const Metas = () => {
       onWorkspaceChange={setCurrentWorkspace}
       onNewTransaction={() => setShowForm(true)}
     >
-      <div className="p-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold flex items-center space-x-3">
-            <Target className="h-7 w-7 text-primary" />
-            <span>Metas Financeiras ({currentWorkspace})</span>
-          </h1>
-          <Button onClick={() => { setEditingGoal(undefined); setShowForm(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Meta
-          </Button>
-        </div>
+      <div className="space-y-6 p-4 lg:p-6">
+        <Card variant="glass" className="overflow-hidden">
+          <CardContent className="p-5 lg:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  Planejamento e disciplina
+                </div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+                  Metas Financeiras
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  Acompanhamento visual de objetivos, contribuições e prazos com leitura rápida do progresso.
+                </p>
+              </div>
+              <Button onClick={() => { setEditingGoal(undefined); setShowForm(true); }} className="rounded-xl shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Meta
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {loading ? (
           <LoadingSpinner text="Carregando metas..." />
@@ -115,15 +127,15 @@ const Metas = () => {
           <>
             {/* Resumo das Metas */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 md:col-span-2">
+              <Card variant="soft" className="md:col-span-2">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-primary flex items-center space-x-1">
                     <DollarSign className="h-4 w-4" />
                     Progresso Total
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {formatCurrency(summary.totalCurrent)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -132,15 +144,15 @@ const Metas = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+              <Card variant="soft">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-warning flex items-center space-x-1">
                     <Clock className="h-4 w-4" />
                     Metas Ativas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.activeCount}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -149,15 +161,15 @@ const Metas = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+              <Card variant="soft">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400 flex items-center space-x-1">
+                  <CardTitle className="text-sm font-medium text-success flex items-center space-x-1">
                     <CheckCircle className="h-4 w-4" />
                     Metas Concluídas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-800 dark:text-green-300">
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.completedCount}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -170,7 +182,7 @@ const Metas = () => {
             {/* Lista de Metas */}
             <h2 className="text-xl font-semibold mt-6 mb-4">Metas Ativas e Pendentes</h2>
             {workspaceGoals.length === 0 ? (
-              <Card>
+              <Card variant="soft">
                 <CardContent className="py-8 text-center text-muted-foreground">
                   Nenhuma meta cadastrada para {currentWorkspace}.
                 </CardContent>

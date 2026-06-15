@@ -55,7 +55,7 @@ const DashboardMetricsGrid: React.FC<DashboardMetricsGridProps> = ({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 1. Receitas do Período */}
-      <Card className="border-l-4 border-l-success dark:border-l-green-600">
+      <Card variant="soft" className="border-l-4 border-l-success">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Receitas do período
@@ -70,7 +70,7 @@ const DashboardMetricsGrid: React.FC<DashboardMetricsGridProps> = ({
       </Card>
 
       {/* 2. Despesas do Período */}
-      <Card className="border-l-4 border-l-error dark:border-l-red-600">
+      <Card variant="soft" className="border-l-4 border-l-error">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Despesas do período
@@ -87,7 +87,7 @@ const DashboardMetricsGrid: React.FC<DashboardMetricsGridProps> = ({
       </Card>
 
       {/* 3. Saldo do Período */}
-      <Card className="border-l-4 border-l-primary dark:border-l-blue-600">
+      <Card variant="soft" className="border-l-4 border-l-primary">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Saldo do período
@@ -102,7 +102,7 @@ const DashboardMetricsGrid: React.FC<DashboardMetricsGridProps> = ({
       </Card>
 
       {/* 4. Despesas/Receitas Ratio */}
-      <Card className="border-l-4 border-l-warning dark:border-l-yellow-600">
+      <Card variant="soft" className="border-l-4 border-l-warning">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Despesas/Receitas

@@ -35,8 +35,8 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ metrics, workspace 
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2 border-0 shadow-lg bg-gradient-to-br from-white to-blue-50 hover:shadow-xl transition-all duration-300">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card variant="soft" className="lg:col-span-2 overflow-hidden transition-all duration-300 hover:shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-primary/10 to-cyan-500/10">
           <CardTitle className="text-lg flex items-center space-x-2">
             <Activity className="h-5 w-5 text-blue-600" />
             <span className="text-gray-900">Resumo do Período</span>
@@ -44,7 +44,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ metrics, workspace 
         </CardHeader>
         <CardContent className="space-y-6 p-6">
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl border border-green-200">
+            <div className="rounded-2xl border border-success/20 bg-gradient-to-br from-success/10 to-success/5 p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-green-700 font-semibold">Total de Entradas</div>
                 <TrendingUp className="h-5 w-5 text-green-600" />
@@ -53,7 +53,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ metrics, workspace 
                 {formatCurrency(metrics.entradasRealizadas + metrics.entradasPrevistas)}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-red-50 to-rose-100 p-6 rounded-xl border border-red-200">
+            <div className="rounded-2xl border border-error/20 bg-gradient-to-br from-error/10 to-error/5 p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-red-700 font-semibold">Total de Saídas</div>
                 <TrendingDown className="h-5 w-5 text-red-600" />
@@ -64,7 +64,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ metrics, workspace 
             </div>
           </div>
           <div className="border-t border-gray-200 pt-6">
-            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg">
+            <div className="flex justify-between items-center rounded-2xl border border-border/60 bg-background/70 p-4">
               <span className="font-semibold text-gray-900 text-lg">Resultado Projetado:</span>
               <span 
                 className="text-2xl font-bold"
@@ -77,8 +77,8 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ metrics, workspace 
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-purple-50 hover:shadow-xl transition-all duration-300">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+      <Card variant="soft" className="overflow-hidden transition-all duration-300 hover:shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-primary/10 to-fuchsia-500/10">
           <CardTitle className="text-lg text-gray-900">Performance</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 p-6">

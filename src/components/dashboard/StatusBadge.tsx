@@ -38,7 +38,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     <Badge 
       variant="outline"
       className={cn(
-        'flex items-center gap-1.5 px-2 py-0.5',
+        'flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
         config.badgeClass,
         className
       )}

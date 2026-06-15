@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Settings as SettingsIcon, Users, FolderOpen } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Users, FolderOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +7,7 @@ import { CategoriesManager } from "@/components/settings/CategoriesManager";
 import { ResponsaveisManager } from "@/components/settings/ResponsaveisManager";
 import { useSettings } from "@/hooks/useSettings";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Layout from "@/components/Layout";
 
 export default function Settings() {
   const { 
@@ -28,26 +28,31 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+    <Layout currentWorkspace="PF" onWorkspaceChange={() => {}} onNewTransaction={() => {}}>
+      <div className="space-y-6 p-4 lg:p-6">
+        <Card variant="glass" className="overflow-hidden">
+          <CardContent className="p-5 lg:p-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  Sistema e governança
+                </div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+                  Configurações
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  Organização de categorias e responsáveis para manter consistência na operação financeira.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => window.history.back()} className="rounded-xl">
                 Voltar
               </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <SettingsIcon className="h-5 w-5" />
-              <h1 className="text-xl font-semibold">Configurações</h1>
             </div>
-          </div>
-        </div>
-      </header>
+          </CardContent>
+        </Card>
 
-      <main className="container mx-auto px-4 py-6">
-        <Card>
+        <Card variant="soft">
           <CardHeader>
             <CardTitle>Gerenciar Dados</CardTitle>
             <CardDescription>
@@ -56,7 +61,7 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-surface/80 p-1">
                 <TabsTrigger value="categories" className="flex items-center gap-2">
                   <FolderOpen className="h-4 w-4" />
                   Categorias
@@ -87,7 +92,7 @@ export default function Settings() {
             </Tabs>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

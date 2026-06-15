@@ -152,7 +152,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal min-w-[200px] h-10",
+            "justify-start rounded-2xl border-border/70 bg-surface/90 text-left font-normal shadow-sm backdrop-blur min-w-[220px] h-11",
             !startDate && "text-muted-foreground"
           )}
         >
@@ -162,28 +162,28 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       </PopoverTrigger>
       
       <PopoverContent 
-        className="w-auto p-0 bg-popover border shadow-lg z-50" 
+        className="w-auto rounded-2xl border-border/70 bg-popover p-0 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.45)] z-50" 
         align="start"
         side={isMobile ? "bottom" : "bottom"}
         sideOffset={8}
       >
         <div className="p-4 space-y-4">
           {/* Presets */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             {presets.slice(0, 4).map((preset) => (
               <Button
                 key={preset.name}
                 variant={presetName === preset.name && !showCustomCalendar ? "default" : "outline"}
                 size="sm"
                 onClick={() => handlePresetClick(preset)}
-                className="min-h-[44px] justify-center text-sm"
+                className="min-h-[44px] justify-center rounded-xl text-sm"
               >
                 {preset.label}
               </Button>
             ))}
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             {presets.slice(4).map((preset) => (
               <Button
                 key={preset.name}
@@ -194,7 +194,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
                 }
                 size="sm"
                 onClick={() => handlePresetClick(preset)}
-                className="min-h-[44px] justify-center text-sm"
+                className="min-h-[44px] justify-center rounded-xl text-sm"
               >
                 {preset.label}
               </Button>

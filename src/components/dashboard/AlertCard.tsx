@@ -24,25 +24,25 @@ interface AlertCardProps {
 const typeConfig = {
   critical: {
     icon: AlertCircle,
-    containerClass: 'bg-error/5 border-error/20',
+    containerClass: 'border-error/20 bg-gradient-to-br from-error/10 via-error/5 to-transparent',
     iconClass: 'text-error',
     titleClass: 'text-error',
   },
   warning: {
     icon: AlertTriangle,
-    containerClass: 'bg-warning/5 border-warning/20',
+    containerClass: 'border-warning/20 bg-gradient-to-br from-warning/10 via-warning/5 to-transparent',
     iconClass: 'text-warning',
     titleClass: 'text-warning',
   },
   info: {
     icon: Info,
-    containerClass: 'bg-primary/5 border-primary/20',
+    containerClass: 'border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent',
     iconClass: 'text-primary',
     titleClass: 'text-primary',
   },
   healthy: {
     icon: CheckCircle,
-    containerClass: 'bg-success/5 border-success/20',
+    containerClass: 'border-success/20 bg-gradient-to-br from-success/10 via-success/5 to-transparent',
     iconClass: 'text-success',
     titleClass: 'text-success',
   },
@@ -59,12 +59,12 @@ export const AlertCard: React.FC<AlertCardProps> = ({
   const Icon = config.icon;
 
   return (
-    <Card className={cn(
-      'border shadow-sm',
+    <Card variant="soft" className={cn(
+      'shadow-sm',
       config.containerClass,
       className
     )}>
-      <CardContent className="p-4">
+      <CardContent className="p-4 lg:p-5">
         <div className="flex items-start gap-3">
           <Icon className={cn('h-5 w-5 shrink-0 mt-0.5', config.iconClass)} />
           <div className="flex-1 min-w-0">

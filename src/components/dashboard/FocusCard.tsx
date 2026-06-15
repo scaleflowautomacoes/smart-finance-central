@@ -7,7 +7,6 @@ import {
   ArrowRight,
   TrendingUp,
   TrendingDown,
-  DollarSign,
   Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,20 +24,20 @@ interface FocusCardProps {
 
 const priorityConfig = {
   high: {
-    containerClass: 'bg-gradient-to-r from-error/5 to-error/10 border-error/20',
-    badgeClass: 'bg-error text-error-foreground',
+    containerClass: 'border-error/20 bg-gradient-to-br from-error/10 via-error/5 to-transparent',
+    badgeClass: 'border-error/20 bg-error/10 text-error',
     icon: AlertCircle,
     iconClass: 'text-error',
   },
   medium: {
-    containerClass: 'bg-gradient-to-r from-warning/5 to-warning/10 border-warning/20',
-    badgeClass: 'bg-warning text-warning-foreground',
+    containerClass: 'border-warning/20 bg-gradient-to-br from-warning/10 via-warning/5 to-transparent',
+    badgeClass: 'border-warning/20 bg-warning/10 text-warning',
     icon: Clock,
     iconClass: 'text-warning',
   },
   low: {
-    containerClass: 'bg-gradient-to-r from-success/5 to-success/10 border-success/20',
-    badgeClass: 'bg-success text-success-foreground',
+    containerClass: 'border-success/20 bg-gradient-to-br from-success/10 via-success/5 to-transparent',
+    badgeClass: 'border-success/20 bg-success/10 text-success',
     icon: TrendingUp,
     iconClass: 'text-success',
   },
@@ -61,22 +60,22 @@ export const FocusCard: React.FC<FocusCardProps> = ({
   const Icon = config.icon;
 
   return (
-    <Card className={cn(
-      'border shadow-md',
+    <Card variant="soft" className={cn(
+      'shadow-sm',
       config.containerClass,
       className
     )}>
-      <CardContent className="p-4">
+      <CardContent className="p-4 lg:p-5">
         <div className="flex items-start gap-3">
           <div className={cn(
-            'p-2 rounded-full bg-background',
+            'rounded-2xl border border-border/60 bg-background/80 p-2.5 shadow-sm',
             config.iconClass
           )}>
             <Icon className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Badge className={config.badgeClass}>
+              <Badge variant="outline" className={config.badgeClass}>
                 {priorityLabels[priority]}
               </Badge>
             </div>
