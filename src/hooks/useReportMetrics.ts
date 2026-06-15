@@ -44,7 +44,17 @@ export const useReportMetrics = (
         endDate: previousEndDate,
         includeVencidas: true,
       });
-      variation = currentMetrics.variation;
+
+      const calculateVariation = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+      };
+
+      variation = {
+        entradas: calculateVariation(currentMetrics.totalEntradas, previousMetrics.totalEntradas),
+        saidas: calculateVariation(currentMetrics.totalSaidas, previousMetrics.totalSaidas),
+        saldo: calculateVariation(currentMetrics.saldoProjetado, previousMetrics.saldoProjetado),
+      };
     }
 
     return {
