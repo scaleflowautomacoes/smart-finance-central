@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { isFinancialDateWithinRange } from '@/utils/financialDate';
+import { calculateFinancialMetrics } from './useFinancialMetricsCore';
 
 export interface FinancialMetrics {
   entradasRealizadas: number;
@@ -21,53 +21,23 @@ export const useFinancialCalculations = (
   endDate?: Date
 ): FinancialMetrics => {
   return useMemo(() => {
-    // Filtrar transações do workspace e período
-    let filteredTransactions = transactions.filter(t => 
-      t.origem === workspace && 
-      !t.deletado &&
-      t.recorrencia_ativa !== false
-    );
-
-    if (startDate && endDate) {
-      filteredTransactions = filteredTransactions.filter(t => {
-        return isFinancialDateWithinRange(t.data, startDate, endDate);
-      });
-    }
-
-    // Separar por tipo e status
-    const entradas = filteredTransactions.filter(t => t.tipo === 'entrada');
-    const saidas = filteredTransactions.filter(t => t.tipo === 'saida');
-
-    const entradasRealizadas = entradas
-      .filter(t => t.status === 'realizada')
-      .reduce((sum, t) => sum + t.valor, 0);
-
-    const entradasPrevistas = entradas
-      .filter(t => t.status === 'prevista' || t.status === 'vencida')
-      .reduce((sum, t) => sum + t.valor, 0);
-
-    const saidasRealizadas = saidas
-      .filter(t => t.status === 'realizada')
-      .reduce((sum, t) => sum + t.valor, 0);
-
-    const saidasPrevistas = saidas
-      .filter(t => t.status === 'prevista' || t.status === 'vencida')
-      .reduce((sum, t) => sum + t.valor, 0);
-
-    const totalEntradas = entradasRealizadas + entradasPrevistas;
-    const totalSaidas = saidasRealizadas + saidasPrevistas;
-    const saldoReal = entradasRealizadas - saidasRealizadas;
-    const saldoProjetado = totalEntradas - totalSaidas;
+    const metrics = calculateFinancialMetrics({
+      transactions,
+      workspace,
+      startDate,
+      endDate,
+      includeVencidas: true,
+    });
 
     return {
-      entradasRealizadas,
-      entradasPrevistas,
-      saidasRealizadas,
-      saidasPrevistas,
-      saldoReal,
-      saldoProjetado,
-      totalEntradas,
-      totalSaidas
+      entradasRealizadas: metrics.entradasRealizadas,
+      entradasPrevistas: metrics.entradasPrevistas,
+      saidasRealizadas: metrics.saidasRealizadas,
+      saidasPrevistas: metrics.saidasPrevistas,
+      saldoReal: metrics.saldoReal,
+      saldoProjetado: metrics.saldoProjetado,
+      totalEntradas: metrics.totalEntradas,
+      totalSaidas: metrics.totalSaidas
     };
   }, [transactions, workspace, startDate, endDate]);
 };

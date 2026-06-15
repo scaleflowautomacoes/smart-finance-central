@@ -1,63 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DashboardMetrics } from '@/types/financial';
-import { startOfMonth, endOfMonth } from 'date-fns';
 import { useToastNotifications } from './useToastNotifications';
 import { useTransactions } from './useTransactions';
 import { useAuxiliaryData } from './useAuxiliaryData';
 import { claimUnownedTransactions, generateRecurrences } from '@/data/financial';
-import { isFinancialDateWithinRange } from '@/utils/financialDate';
-
-// --- Funções de Cálculo (Mantidas) ---
-const calculateMetrics = (
-  transactions: any[], // Usamos any[] aqui para evitar dependência circular de tipos
-  origem: 'PF' | 'PJ', 
-  startDate?: Date, 
-  endDate?: Date
-): DashboardMetrics => {
-  let filteredTransactions = transactions.filter(t => 
-    t.origem === origem && 
-    !t.deletado &&
-    t.recorrencia_ativa !== false
-  );
-  
-  const effectiveStartDate = startDate || startOfMonth(new Date());
-  const effectiveEndDate = endDate || endOfMonth(new Date());
-  
-  filteredTransactions = filteredTransactions.filter(t => {
-    return isFinancialDateWithinRange(t.data, effectiveStartDate, effectiveEndDate);
-  });
-  
-  const entradas = filteredTransactions.filter(t => t.tipo === 'entrada');
-  const saidas = filteredTransactions.filter(t => t.tipo === 'saida');
-  
-  const entradasRealizadas = entradas
-    .filter(t => t.status === 'realizada')
-    .reduce((sum, t) => sum + t.valor, 0);
-  
-  const saidasPagas = saidas
-    .filter(t => t.status === 'realizada')
-    .reduce((sum, t) => sum + t.valor, 0);
-  
-  const entradasPrevistas = entradas
-    .filter(t => t.status === 'prevista' || t.status === 'vencida')
-    .reduce((sum, t) => sum + t.valor, 0);
-  
-  const saidasPrevistas = saidas
-    .filter(t => t.status === 'prevista' || t.status === 'vencida')
-    .reduce((sum, t) => sum + t.valor, 0);
-  
-  const saldoReal = entradasRealizadas - saidasPagas;
-  const saldoProjetado = (entradasPrevistas + entradasRealizadas) - (saidasPrevistas + saidasPagas);
-  
-  return {
-    entradasPrevistas,
-    entradasRealizadas,
-    saidasPrevistas,
-    saidasPagas,
-    saldoProjetado,
-    saldoReal
-  };
-};
+import { calculateFinancialMetrics } from './useFinancialMetricsCore';
 
 export const useSupabaseFinancialData = () => {
   const { showSuccess } = useToastNotifications();
