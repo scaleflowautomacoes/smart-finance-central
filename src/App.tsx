@@ -13,6 +13,7 @@ import VeiculosManutencoes from "./pages/VeiculosManutencoes";
 import Investimentos from "./pages/Investimentos";
 import FluxoDeCaixa from "./pages/FluxoDeCaixa";
 import Lucro from "./pages/Lucro";
+import ExtratoPJ from "./pages/ExtratoPJ";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/investimentos" element={<Investimentos />} />
             <Route path="/fluxo-de-caixa" element={<FluxoDeCaixa />} />
             <Route path="/lucro" element={<Lucro />} />
+            <Route path="/extrato-pj" element={<ExtratoPJ />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

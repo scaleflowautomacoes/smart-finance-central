@@ -14,6 +14,181 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_statement_entries: {
+        Row: {
+          amount: number
+          counterparty_bank: string | null
+          counterparty_document: string | null
+          counterparty_name: string | null
+          created_at: string
+          description: string
+          direction: string
+          final_category_id: string | null
+          id: string
+          import_id: string
+          line_index: number
+          metadata: Json
+          movement_type: string
+          page_number: number
+          raw_hash: string
+          raw_text: string
+          running_balance: number | null
+          statement_date: string
+          status: string
+          suggested_category: string | null
+          transaction_id: string | null
+          updated_at: string
+          workspace: string
+        }
+        Insert: {
+          amount?: number
+          counterparty_bank?: string | null
+          counterparty_document?: string | null
+          counterparty_name?: string | null
+          created_at?: string
+          description: string
+          direction: string
+          final_category_id?: string | null
+          id?: string
+          import_id: string
+          line_index?: number
+          metadata?: Json
+          movement_type: string
+          page_number?: number
+          raw_hash: string
+          raw_text: string
+          running_balance?: number | null
+          statement_date: string
+          status?: string
+          suggested_category?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          workspace?: string
+        }
+        Update: {
+          amount?: number
+          counterparty_bank?: string | null
+          counterparty_document?: string | null
+          counterparty_name?: string | null
+          created_at?: string
+          description?: string
+          direction?: string
+          final_category_id?: string | null
+          id?: string
+          import_id?: string
+          line_index?: number
+          metadata?: Json
+          movement_type?: string
+          page_number?: number
+          raw_hash?: string
+          raw_text?: string
+          running_balance?: number | null
+          statement_date?: string
+          status?: string
+          suggested_category?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          workspace?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statement_entries_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statement_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_entries_final_category_id_fkey"
+            columns: ["final_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_entries_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_statement_imports: {
+        Row: {
+          account_bank: string | null
+          account_document: string | null
+          account_holder: string | null
+          created_at: string
+          final_balance: number
+          id: string
+          imported_at: string
+          metadata: Json
+          notes: string | null
+          page_count: number
+          period_end: string | null
+          period_start: string | null
+          processed_at: string | null
+          source_hash: string
+          source_name: string
+          source_type: string
+          status: string
+          statement_currency: string
+          total_entries: number
+          total_exits: number
+          updated_at: string
+          workspace: string
+        }
+        Insert: {
+          account_bank?: string | null
+          account_document?: string | null
+          account_holder?: string | null
+          created_at?: string
+          final_balance?: number
+          id?: string
+          imported_at?: string
+          metadata?: Json
+          notes?: string | null
+          page_count?: number
+          period_end?: string | null
+          period_start?: string | null
+          processed_at?: string | null
+          source_hash: string
+          source_name: string
+          source_type?: string
+          status?: string
+          statement_currency?: string
+          total_entries?: number
+          total_exits?: number
+          updated_at?: string
+          workspace?: string
+        }
+        Update: {
+          account_bank?: string | null
+          account_document?: string | null
+          account_holder?: string | null
+          created_at?: string
+          final_balance?: number
+          id?: string
+          imported_at?: string
+          metadata?: Json
+          notes?: string | null
+          page_count?: number
+          period_end?: string | null
+          period_start?: string | null
+          processed_at?: string | null
+          source_hash?: string
+          source_name?: string
+          source_type?: string
+          status?: string
+          statement_currency?: string
+          total_entries?: number
+          total_exits?: number
+          updated_at?: string
+          workspace?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, User, Plus, Settings, LogOut, Scale, TrendingUp, Target, Car, DollarSign, Briefcase, LayoutDashboard, Menu, Search, Bell, Sparkles } from 'lucide-react';
+import { Building2, User, Plus, Settings, LogOut, Scale, TrendingUp, Target, Car, DollarSign, Briefcase, LayoutDashboard, Menu, Search, Bell, Sparkles, FileText } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
@@ -21,6 +21,7 @@ const navItems = [
   { to: '/fluxo-de-caixa', icon: Briefcase, label: 'Fluxo de Caixa' },
   { to: '/lucro', icon: TrendingUp, label: 'Lucro (DRE)' },
   { to: '/relatorios', icon: TrendingUp, label: 'Relatórios' },
+  { to: '/extrato-pj', icon: FileText, label: 'Extrato PJ' },
   { to: '/dividas', icon: Scale, label: 'Dívidas' },
   { to: '/metas', icon: Target, label: 'Metas' },
   { to: '/investimentos', icon: DollarSign, label: 'Investimentos' },
