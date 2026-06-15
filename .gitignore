@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local artifacts kept out of version control
+/Database/
+/central-financeira-implementacao/
+/central-financeira-implementacao.zip
