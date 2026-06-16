@@ -1,12 +1,12 @@
 {
   "name": "Central Financeira",
   "short_name": "CentralFin",
-  "description": "Sistema de gestão financeira interna",
+  "description": "Centro de comando financeiro interno para PF/PJ",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
   "icons": [
     {
       "src": "/favicon.ico",

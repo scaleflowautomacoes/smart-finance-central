@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import { TrendingUp, Filter, Layers3 } from 'lucide-react';
+import { Filter, Layers3 } from 'lucide-react';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
+import { useGoals } from '@/hooks/useGoals';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DateRangeFilter, { DateRangeState, PresetName } from '@/components/DateRangeFilter';
 import { startOfMonth, endOfMonth } from 'date-fns';
@@ -10,6 +11,7 @@ import ComparativeMetrics from '@/components/relatorios/ComparativeMetrics';
 import CategoryBreakdown from '@/components/relatorios/CategoryBreakdown';
 import CashFlowArea from '@/components/relatorios/CashFlowArea';
 import FinancialIndicators from '@/components/relatorios/FinancialIndicators';
+import ExecutiveReportStrip from '@/components/relatorios/ExecutiveReportStrip';
 
 const Relatorios = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
@@ -21,6 +23,7 @@ const Relatorios = () => {
   });
 
   const { transactions, categories, loading } = useSupabaseFinancialData();
+  const { goals, loading: goalsLoading } = useGoals();
   
   const { metrics, loading: metricsLoading } = useReportMetrics(
     transactions, 
@@ -41,7 +44,7 @@ const Relatorios = () => {
     });
   };
 
-  if (loading || metricsLoading) {
+  if (loading || metricsLoading || goalsLoading) {
     return (
       <Layout
         currentWorkspace={currentWorkspace}
@@ -60,6 +63,14 @@ const Relatorios = () => {
       onNewTransaction={() => {}}
     >
       <div className="space-y-6 p-4 lg:p-6">
+        <ExecutiveReportStrip
+          workspace={currentWorkspace}
+          transactions={transactions}
+          metrics={metrics}
+          goals={goals.filter((goal) => goal.workspace === currentWorkspace)}
+          dateRange={dateRange}
+        />
+
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

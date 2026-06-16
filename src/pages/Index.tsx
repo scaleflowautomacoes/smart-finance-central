@@ -4,6 +4,7 @@ import Dashboard from '@/components/Dashboard';
 import TransactionTable from '@/components/TransactionTable';
 import TransactionForm from '@/components/TransactionForm';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
+import { useGoals } from '@/hooks/useGoals';
 import { Transaction } from '@/types/financial';
 import { DateRangeState, PresetName } from '@/components/DateRangeFilter';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -57,6 +58,7 @@ const Index = () => {
     refreshData,
     setDateFilter
   } = useSupabaseFinancialData();
+  const { goals, loading: goalsLoading } = useGoals();
 
   useEffect(() => {
     localStorage.setItem('financial-workspace', currentWorkspace);
@@ -157,7 +159,7 @@ const Index = () => {
     );
   }
   
-  if (loading) {
+  if (loading || goalsLoading) {
     return (
       <Layout
         currentWorkspace={currentWorkspace}
@@ -171,6 +173,8 @@ const Index = () => {
     );
   }
 
+  const workspaceGoals = goals.filter((goal) => goal.workspace === currentWorkspace);
+
   return (
     <Layout
       currentWorkspace={currentWorkspace}
@@ -182,6 +186,7 @@ const Index = () => {
           workspace={currentWorkspace}
           transactions={transactions}
           categories={categories}
+          goals={workspaceGoals}
           dateRange={dateRange}
           onRangeChange={handleRangeChange}
           onClearFilter={handleClearFilter}

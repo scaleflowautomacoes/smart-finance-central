@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
-import { FinancialMetrics } from './useFinancialCalculations';
-import { calculateFinancialMetrics, getPreviousPeriodDates } from './useFinancialMetricsCore';
+import { calculateFinancialMetrics, getPreviousPeriodDates, FinancialMetricsCore } from './useFinancialMetricsCore';
 
 interface ComparativeMetrics {
-  current: FinancialMetrics;
-  previous: FinancialMetrics;
+  current: FinancialMetricsCore;
+  previous: FinancialMetricsCore;
   variation: {
     entradas: number;
     saidas: number;
