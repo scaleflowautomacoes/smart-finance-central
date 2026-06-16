@@ -13,8 +13,10 @@ interface ExecutiveReportStripProps {
   transactions: Transaction[];
   metrics: {
     current: FinancialMetricsCore;
-    previous: FinancialMetricsCore;
-    variation: { entradas: number; saidas: number; saldo: number };
+    previousWindow: FinancialMetricsCore;
+    previousYear: FinancialMetricsCore | null;
+    variationWindow: { entradas: number; saidas: number; saldo: number };
+    variationYear: { entradas: number; saidas: number; saldo: number } | null;
   };
   goals?: Goal[];
   dateRange: DateRangeState;
@@ -46,7 +48,7 @@ const ExecutiveReportStrip: React.FC<ExecutiveReportStripProps> = ({ workspace, 
     {
       label: 'Saldo projetado',
       value: formatBRL(metrics.current.saldoProjetado),
-      hint: `${metrics.variation.saldo >= 0 ? '+' : ''}${metrics.variation.saldo.toFixed(1)}% vs período anterior`,
+      hint: `${metrics.variationWindow.saldo >= 0 ? '+' : ''}${metrics.variationWindow.saldo.toFixed(1)}% vs janela anterior`,
       icon: Landmark,
       tone: metrics.current.saldoProjetado >= 0 ? 'positive' : 'negative',
     },
@@ -168,6 +170,27 @@ const ExecutiveReportStrip: React.FC<ExecutiveReportStripProps> = ({ workspace, 
             <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Relação despesa/receita</div>
             <div className="mt-2 text-lg font-semibold text-foreground">{metrics.current.despesasReceitasRatio.toFixed(1)}%</div>
             <div className="mt-1 text-xs text-muted-foreground">Leitura de eficiência operacional do recorte atual</div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="rounded-[1.2rem] border border-border/60 bg-background/80 p-4">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Comparação base</div>
+            <div className="mt-2 text-sm font-medium text-foreground">Janela anterior</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {formatBRL(metrics.previousWindow.totalEntradas)} em entradas, {formatBRL(metrics.previousWindow.totalSaidas)} em saídas.
+            </div>
+          </div>
+          <div className="rounded-[1.2rem] border border-border/60 bg-background/80 p-4">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Comparação anual</div>
+            <div className="mt-2 text-sm font-medium text-foreground">
+              {metrics.previousYear ? 'Mesmo período do ano anterior' : 'Sem base anual suficiente'}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {metrics.previousYear
+                ? `${formatBRL(metrics.previousYear.totalEntradas)} em entradas, ${formatBRL(metrics.previousYear.totalSaidas)} em saídas.`
+                : 'Quando houver histórico anual, essa leitura aparece aqui automaticamente.'}
+            </div>
           </div>
         </div>
       </CardContent>

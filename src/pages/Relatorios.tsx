@@ -5,7 +5,6 @@ import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import { useGoals } from '@/hooks/useGoals';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DateRangeFilter, { DateRangeState, PresetName } from '@/components/DateRangeFilter';
-import { startOfMonth, endOfMonth } from 'date-fns';
 import { useReportMetrics } from '@/hooks/useReportMetrics';
 import ComparativeMetrics from '@/components/relatorios/ComparativeMetrics';
 import CategoryBreakdown from '@/components/relatorios/CategoryBreakdown';
@@ -13,15 +12,12 @@ import CashFlowArea from '@/components/relatorios/CashFlowArea';
 import FinancialIndicators from '@/components/relatorios/FinancialIndicators';
 import ExecutiveReportStrip from '@/components/relatorios/ExecutiveReportStrip';
 import FinancialPeriodInsightsCard from '@/components/dashboard/FinancialPeriodInsightsCard';
+import { createCurrentMonthDateRangeState, createAllPeriodDateRangeState } from '@/lib/financialPeriods';
 
 const Relatorios = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
 
-  const [dateRange, setDateRange] = useState<DateRangeState>({
-    presetName: 'este-mes',
-    startDate: startOfMonth(new Date()),
-    endDate: endOfMonth(new Date()),
-  });
+  const [dateRange, setDateRange] = useState<DateRangeState>(createCurrentMonthDateRangeState());
 
   const { transactions, categories, loading } = useSupabaseFinancialData();
   const { goals, loading: goalsLoading } = useGoals();
@@ -38,11 +34,7 @@ const Relatorios = () => {
   };
 
   const handleClearFilter = () => {
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-      presetName: 'tudo',
-    });
+    setDateRange(createAllPeriodDateRangeState());
   };
 
   if (loading || metricsLoading || goalsLoading) {

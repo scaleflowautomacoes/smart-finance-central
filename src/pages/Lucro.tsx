@@ -4,12 +4,12 @@ import { Filter, LineChart } from 'lucide-react';
 import { useSupabaseFinancialData } from '@/hooks/useSupabaseFinancialData';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DateRangeFilter, { DateRangeState, PresetName } from '@/components/DateRangeFilter';
-import { startOfYear, endOfMonth } from 'date-fns';
 import { useProfitLoss } from '@/hooks/useProfitLoss';
 import DRETable from '@/components/lucro/DRETable';
 import ProfitIndicators from '@/components/lucro/ProfitIndicators';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { createAllPeriodDateRangeState, createCurrentMonthDateRangeState } from '@/lib/financialPeriods';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -18,11 +18,7 @@ const Lucro = () => {
   const now = new Date();
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
 
-  const [dateRange, setDateRange] = useState<DateRangeState>({
-    presetName: 'custom',
-    startDate: startOfYear(now),
-    endDate: endOfMonth(now),
-  });
+  const [dateRange, setDateRange] = useState<DateRangeState>(createCurrentMonthDateRangeState(now));
 
   const { transactions, categories, loading } = useSupabaseFinancialData();
 
@@ -39,11 +35,7 @@ const Lucro = () => {
   };
 
   const handleClearFilter = () => {
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-      presetName: 'tudo',
-    });
+    setDateRange(createAllPeriodDateRangeState());
   };
 
   if (loading || dreLoading) {

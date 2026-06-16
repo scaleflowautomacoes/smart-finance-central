@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, X } from 'lucide-react';
-import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-
-export type PresetName = 'tudo' | 'hoje' | 'ontem' | '7dias' | 'este-mes' | 'mes-passado' | 'este-ano' | 'custom';
-
-export interface DateRangeState {
-  startDate?: Date;
-  endDate?: Date;
-  presetName: PresetName;
-}
+import {
+  PERIOD_PRESETS,
+  PresetName,
+  getDateRangeFromPreset,
+} from '@/lib/financialPeriods';
 
 interface DateRangeFilterProps {
   startDate?: Date;
@@ -47,70 +44,11 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const presets: Preset[] = [
-    {
-      name: 'tudo',
-      label: 'Tudo',
-      getRange: () => ({ start: undefined, end: undefined }),
-    },
-    {
-      name: 'hoje',
-      label: 'Hoje',
-      getRange: () => {
-        const now = new Date();
-        return { start: startOfDay(now), end: endOfDay(now) };
-      },
-    },
-    {
-      name: 'ontem',
-      label: 'Ontem',
-      getRange: () => {
-        const yesterday = subDays(new Date(), 1);
-        return { start: startOfDay(yesterday), end: endOfDay(yesterday) };
-      },
-    },
-    {
-      name: '7dias',
-      label: 'Últimos 7 dias',
-      getRange: () => {
-        const now = new Date();
-        const sevenDaysAgo = subDays(now, 6);
-        return { start: startOfDay(sevenDaysAgo), end: endOfDay(now) };
-      },
-    },
-    {
-      name: 'este-mes',
-      label: 'Este mês',
-      getRange: () => {
-        const now = new Date();
-        return { start: startOfMonth(now), end: endOfMonth(now) };
-      },
-    },
-    {
-      name: 'mes-passado',
-      label: 'Mês passado',
-      getRange: () => {
-        const lastMonth = subMonths(new Date(), 1);
-        return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
-      },
-    },
-    {
-      name: 'este-ano',
-      label: 'Este ano',
-      getRange: () => {
-        const now = new Date();
-        return { start: startOfYear(now), end: endOfYear(now) };
-      },
-    },
-    {
-      name: 'custom',
-      label: 'Personalizado',
-      getRange: () => {
-        const now = new Date();
-        return { start: startOfMonth(now), end: endOfMonth(now) };
-      },
-    },
-  ];
+  const presets: Preset[] = PERIOD_PRESETS.map((preset) => ({
+    name: preset.name,
+    label: preset.label,
+    getRange: () => getDateRangeFromPreset(preset.name),
+  }));
 
   const handlePresetClick = (preset: Preset) => {
     if (preset.name === 'custom') {
@@ -144,8 +82,6 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     return `${startStr} → ${endStr}`;
   };
 
-  const currentPresetLabel = presets.find(p => p.name === presetName)?.label || 'Personalizado';
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -155,9 +91,9 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
             "justify-start rounded-2xl border-border/70 bg-surface/90 text-left font-normal shadow-sm backdrop-blur min-w-[220px] h-11",
             !startDate && "text-muted-foreground"
           )}
-        >
+          >
           <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-          <span className="truncate">{formatRange(startDate, endDate)}</span>
+          <span className="truncate">{presetName === 'tudo' ? 'Todo o período' : formatRange(startDate, endDate)}</span>
         </Button>
       </PopoverTrigger>
       
@@ -167,31 +103,12 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         side={isMobile ? "bottom" : "bottom"}
         sideOffset={8}
       >
-        <div className="p-4 space-y-4">
-          {/* Presets */}
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {presets.slice(0, 4).map((preset) => (
+        <div className="space-y-4 p-4">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+            {presets.map((preset) => (
               <Button
                 key={preset.name}
                 variant={presetName === preset.name && !showCustomCalendar ? "default" : "outline"}
-                size="sm"
-                onClick={() => handlePresetClick(preset)}
-                className="min-h-[44px] justify-center rounded-xl text-sm"
-              >
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-          
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {presets.slice(4).map((preset) => (
-              <Button
-                key={preset.name}
-                variant={
-                  preset.name === 'custom' 
-                    ? (showCustomCalendar ? "default" : "outline")
-                    : (presetName === preset.name && !showCustomCalendar ? "default" : "outline")
-                }
                 size="sm"
                 onClick={() => handlePresetClick(preset)}
                 className="min-h-[44px] justify-center rounded-xl text-sm"
@@ -227,7 +144,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
             className="w-full min-h-[44px] justify-center"
           >
             <X className="mr-2 h-4 w-4" />
-            Limpar filtro (Tudo)
+            Limpar filtro
           </Button>
         </div>
       </PopoverContent>
@@ -236,3 +153,4 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
 };
 
 export default DateRangeFilter;
+export type { DateRangeState, PresetName } from '@/lib/financialPeriods';

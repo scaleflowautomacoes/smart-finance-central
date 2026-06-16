@@ -8,6 +8,7 @@ import { useGoals } from '@/hooks/useGoals';
 import { Transaction } from '@/types/financial';
 import { DateRangeState, PresetName } from '@/components/DateRangeFilter';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { createAllPeriodDateRangeState, createCurrentMonthDateRangeState } from '@/lib/financialPeriods';
 
 const Index = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>(() => {
@@ -19,27 +20,21 @@ const Index = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
   
   const [dateRange, setDateRange] = useState<DateRangeState>(() => {
-    const defaultRange: DateRangeState = {
-      startDate: undefined,
-      endDate: undefined,
-      presetName: 'tudo'
-    };
-    
     const saved = localStorage.getItem('financial-date-range');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         return {
-          startDate: parsed.startDate ? new Date(parsed.startDate) : defaultRange.startDate,
-          endDate: parsed.endDate ? new Date(parsed.endDate) : defaultRange.endDate,
-          presetName: parsed.presetName || 'tudo'
+          startDate: parsed.startDate ? new Date(parsed.startDate) : undefined,
+          endDate: parsed.endDate ? new Date(parsed.endDate) : undefined,
+          presetName: parsed.presetName || 'este-mes'
         };
       } catch (e) {
         console.error("Failed to parse financial-date-range from localStorage", e);
-        return defaultRange;
+        return createCurrentMonthDateRangeState();
       }
     }
-    return defaultRange;
+    return createCurrentMonthDateRangeState();
   });
 
   const {
@@ -93,11 +88,7 @@ const Index = () => {
   };
 
   const handleClearFilter = () => {
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-      presetName: 'tudo'
-    });
+    setDateRange(createAllPeriodDateRangeState());
   };
 
   const handleNewTransaction = () => {

@@ -1,15 +1,23 @@
 import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
 import { calculateFinancialMetrics, getPreviousPeriodDates, FinancialMetricsCore } from './useFinancialMetricsCore';
+import { getPreviousYearRange } from '@/lib/financialPeriods';
+import { isFinancialDateWithinRange } from '@/utils/financialDate';
 
 interface ComparativeMetrics {
   current: FinancialMetricsCore;
-  previous: FinancialMetricsCore;
-  variation: {
+  previousWindow: FinancialMetricsCore;
+  previousYear: FinancialMetricsCore | null;
+  variationWindow: {
     entradas: number;
     saidas: number;
     saldo: number;
   };
+  variationYear: {
+    entradas: number;
+    saidas: number;
+    saldo: number;
+  } | null;
 }
 
 export const useReportMetrics = (
@@ -27,16 +35,18 @@ export const useReportMetrics = (
       includeVencidas: true,
     });
 
-    let previousMetrics = currentMetrics;
-    let variation: ComparativeMetrics['variation'] = {
+    let previousWindowMetrics = currentMetrics;
+    let previousYearMetrics: FinancialMetricsCore | null = null;
+    let variationWindow: ComparativeMetrics['variationWindow'] = {
       entradas: 0,
       saidas: 0,
       saldo: 0,
     };
+    let variationYear: ComparativeMetrics['variationYear'] = null;
 
     if (startDate && endDate) {
       const { previousStartDate, previousEndDate } = getPreviousPeriodDates(startDate, endDate);
-      previousMetrics = calculateFinancialMetrics({
+      previousWindowMetrics = calculateFinancialMetrics({
         transactions,
         workspace,
         startDate: previousStartDate,
@@ -44,22 +54,52 @@ export const useReportMetrics = (
         includeVencidas: true,
       });
 
+      const previousYearRange = getPreviousYearRange(startDate, endDate);
+      if (previousYearRange?.startDate && previousYearRange.endDate) {
+        const hasHistoricalData = transactions.some((transaction) =>
+          transaction.origem === workspace &&
+          !transaction.deletado &&
+          transaction.status !== 'cancelada' &&
+          isFinancialDateWithinRange(transaction.data, previousYearRange.startDate, previousYearRange.endDate),
+        );
+
+        if (hasHistoricalData) {
+          previousYearMetrics = calculateFinancialMetrics({
+            transactions,
+            workspace,
+            startDate: previousYearRange.startDate,
+            endDate: previousYearRange.endDate,
+            includeVencidas: true,
+          });
+        }
+      }
+
       const calculateVariation = (current: number, previous: number) => {
         if (previous === 0) return current > 0 ? 100 : 0;
         return ((current - previous) / previous) * 100;
       };
 
-      variation = {
-        entradas: calculateVariation(currentMetrics.totalEntradas, previousMetrics.totalEntradas),
-        saidas: calculateVariation(currentMetrics.totalSaidas, previousMetrics.totalSaidas),
-        saldo: calculateVariation(currentMetrics.saldoProjetado, previousMetrics.saldoProjetado),
+      variationWindow = {
+        entradas: calculateVariation(currentMetrics.totalEntradas, previousWindowMetrics.totalEntradas),
+        saidas: calculateVariation(currentMetrics.totalSaidas, previousWindowMetrics.totalSaidas),
+        saldo: calculateVariation(currentMetrics.saldoProjetado, previousWindowMetrics.saldoProjetado),
       };
+
+      if (previousYearMetrics) {
+        variationYear = {
+          entradas: calculateVariation(currentMetrics.totalEntradas, previousYearMetrics.totalEntradas),
+          saidas: calculateVariation(currentMetrics.totalSaidas, previousYearMetrics.totalSaidas),
+          saldo: calculateVariation(currentMetrics.saldoProjetado, previousYearMetrics.saldoProjetado),
+        };
+      }
     }
 
     return {
       current: currentMetrics,
-      previous: previousMetrics,
-      variation,
+      previousWindow: previousWindowMetrics,
+      previousYear: previousYearMetrics,
+      variationWindow,
+      variationYear,
     };
   }, [transactions, workspace, startDate, endDate]);
 
