@@ -8,6 +8,8 @@ import { ImprovedRecentTransactions } from './dashboard/ImprovedRecentTransactio
 import { ImprovedDashboardCharts } from './dashboard/ImprovedDashboardCharts';
 import { ImprovedCategoryCharts } from './dashboard/ImprovedCategoryCharts';
 import MonthlyTrendChart from './dashboard/MonthlyTrendChart';
+import RecurringPatternsCard from './dashboard/RecurringPatternsCard';
+import FinancialPeriodInsightsCard from './dashboard/FinancialPeriodInsightsCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCentralMetrics } from '@/hooks/useCentralMetrics';
 import ExecutiveCommandCenter from './dashboard/ExecutiveCommandCenter';
@@ -61,70 +63,110 @@ const Dashboard: React.FC<DashboardProps> = ({
         onNewTransaction={onNewTransaction}
       />
 
-      <MetricsGridUsingCentralMetrics
-        transactions={transactions}
-        workspace={workspace}
-        startDate={dateRange.startDate}
-        endDate={dateRange.endDate}
-      />
+      <section className="grid gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-9">
+          <MetricsGridUsingCentralMetrics
+            transactions={transactions}
+            workspace={workspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <FocusSection
-          transactions={transactions}
-          workspace={workspace}
-          startDate={dateRange.startDate}
-          endDate={dateRange.endDate}
-        />
-        <AlertsSection
-          transactions={transactions}
-          workspace={workspace}
-          startDate={dateRange.startDate}
-          endDate={dateRange.endDate}
-        />
-      </div>
+        <Card variant="soft" className="xl:col-span-3 overflow-hidden">
+          <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
+            <div className="space-y-2">
+              <div className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Filtro atual</div>
+              <div className="text-base font-semibold text-foreground">{monthLabel}</div>
+              <p className="text-sm text-muted-foreground">
+                Ajuste rápido do recorte temporal sem perder a leitura executiva.
+              </p>
+            </div>
+            <DateRangeFilter
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              presetName={dateRange.presetName}
+              onRangeChange={onRangeChange}
+              onClear={onClearFilter}
+            />
+          </CardContent>
+        </Card>
+      </section>
 
-      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <MonthlyTrendChart transactions={transactions} workspace={workspace} />
-        <div className="space-y-5">
+      <section className="grid gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-12">
+          <FinancialPeriodInsightsCard
+            transactions={transactions}
+            categories={categories}
+            workspace={workspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-7">
+          <MonthlyTrendChart transactions={transactions} workspace={workspace} />
+        </div>
+        <div className="xl:col-span-5 space-y-5">
           <ImprovedDashboardCharts
             transactions={transactions}
             workspace={workspace}
             startDate={dateRange.startDate}
             endDate={dateRange.endDate}
           />
-          <Card variant="soft">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Filtro atual</div>
-                  <div className="text-sm text-foreground">{monthLabel}</div>
-                </div>
-                <DateRangeFilter
-                  startDate={dateRange.startDate}
-                  endDate={dateRange.endDate}
-                  presetName={dateRange.presetName}
-                  onRangeChange={onRangeChange}
-                  onClear={onClearFilter}
-                />
-              </div>
-            </CardContent>
-          </Card>
         </div>
-      </div>
+      </section>
 
-      <ImprovedCategoryCharts
-        transactions={transactions}
-        categories={categories}
-        workspace={workspace}
-        startDate={dateRange.startDate}
-        endDate={dateRange.endDate}
-      />
+      <section className="grid gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-5">
+          <FocusSection
+            transactions={transactions}
+            workspace={workspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
+        <div className="xl:col-span-7">
+          <AlertsSection
+            transactions={transactions}
+            workspace={workspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
+      </section>
 
-      <ImprovedRecentTransactions
-        transactions={transactions}
-        categories={categories}
-        workspace={workspace}
-      />
+      <section className="grid gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-12">
+          <RecurringPatternsCard
+            transactions={transactions}
+            workspace={workspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8">
+          <ImprovedCategoryCharts
+            transactions={transactions}
+            categories={categories}
+            workspace={workspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
+        <div className="xl:col-span-4">
+          <ImprovedRecentTransactions
+            transactions={transactions}
+            categories={categories}
+            workspace={workspace}
+          />
+        </div>
+      </section>
     </div>
   );
 };

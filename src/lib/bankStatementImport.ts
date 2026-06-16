@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { inferPjCategory, inferPjTransactionDirection } from '@/lib/pjCategorization';
 
 export type StatementWorkspace = 'PF' | 'PJ';
 export type StatementDirection = 'entrada' | 'saida';
@@ -176,43 +177,25 @@ const inferMovementType = (description: string): StatementMovementType => {
 };
 
 const inferDirection = (description: string, sectionDirection?: StatementDirection): StatementDirection => {
-  const lowered = description.toLowerCase();
-  if (lowered.includes('recebida') || lowered.includes('reembolso')) return 'entrada';
-  if (lowered.includes('enviada') || lowered.includes('compra no débito') || lowered.includes('boleto') || lowered.includes('tarifa')) return 'saida';
-  return sectionDirection || 'saida';
+  return inferPjTransactionDirection({
+    description,
+    direction: sectionDirection || null,
+  }) || 'saida';
 };
 
 const inferCategory = (description: string, direction: StatementDirection) => {
-  const lowered = description.toLowerCase();
-  const isTransferenciaInterna = lowered.includes('brenda tamara') || lowered.includes('higor raphael plens') || lowered.includes('nu pagamentos');
+  const inferred = inferPjCategory({
+    description,
+    direction,
+  });
 
-  if (lowered.includes('receita federal') || lowered.includes('imposto') || lowered.includes('inss') || lowered.includes('darf') || lowered.includes('simples')) {
-    return { category: 'Impostos', confidence: 0.98 };
+  if (inferred.category) {
+    return inferred;
   }
-  if (lowered.includes('posto') || lowered.includes('gás') || lowered.includes('gasolina') || lowered.includes('estacionamento') || lowered.includes('aero') || lowered.includes('loca') || lowered.includes('frota')) {
-    return { category: 'Frota', confidence: 0.9 };
-  }
-  if (lowered.includes('telef') || lowered.includes('internet') || lowered.includes('copel') || lowered.includes('energia') || lowered.includes('condominio') || lowered.includes('condomínio') || lowered.includes('aluguel') || lowered.includes('mrv')) {
-    return { category: 'Estrutura', confidence: 0.86 };
-  }
-  if (lowered.includes('mercado pago') || lowered.includes('asaas') || lowered.includes('cielo') || lowered.includes('stone') || lowered.includes('pagseguro') || lowered.includes('ebanx') || lowered.includes('pix marketplace')) {
-    return direction === 'entrada'
-      ? { category: 'Recebimentos', confidence: 0.9 }
-      : { category: 'Intermediação financeira', confidence: 0.82 };
-  }
-  if (isTransferenciaInterna) {
-    return { category: 'Transferências internas', confidence: 0.95 };
-  }
-  if (lowered.includes('restaurante') || lowered.includes('caf') || lowered.includes('padaria') || lowered.includes('aliment') || lowered.includes('happi') || lowered.includes('chopp') || lowered.includes('fogo') || lowered.includes('lanch')) {
-    return { category: 'Operação', confidence: 0.78 };
-  }
-  if (lowered.includes('marketing') || lowered.includes('anúncio') || lowered.includes('anuncio') || lowered.includes('ads') || lowered.includes('meta') || lowered.includes('google') || lowered.includes('four pixel')) {
-    return { category: 'Marketing', confidence: 0.84 };
-  }
-  if (direction === 'entrada') {
-    return { category: 'Receita', confidence: 0.7 };
-  }
-  return { category: 'Administrativo', confidence: 0.5 };
+
+  return direction === 'entrada'
+    ? { category: 'Receita', confidence: 0.7 }
+    : { category: 'Administrativo', confidence: 0.5 };
 };
 
 const cleanDescription = (raw: string) => removeDoubleSpaces(raw)

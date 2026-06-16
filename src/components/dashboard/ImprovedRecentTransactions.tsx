@@ -6,6 +6,7 @@ import { compareFinancialDateStrings } from '@/utils/financialDate';
 import { Link } from 'react-router-dom';
 import { ArrowRight, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { buildDerivedCategoryMap, dedupeGeneratedRecurrences, resolveEffectiveCategoryId } from '@/lib/financialAnalytics';
 
 interface ImprovedRecentTransactionsProps {
   transactions: Transaction[];
@@ -22,24 +23,21 @@ export const ImprovedRecentTransactions: React.FC<ImprovedRecentTransactionsProp
 }) => {
   // Transações que exigem atenção (vencidas, sem categoria, valores altos)
   const criticalTransactions = useMemo(() => {
-    return transactions
-      .filter(t => 
-        t.origem === workspace && 
-        !t.deletado && 
-        (t.status === 'vencida' || !t.categoria_id)
-      )
+    const scoped = dedupeGeneratedRecurrences(transactions).filter(
+      (transaction) => transaction.origem === workspace && !transaction.deletado,
+    );
+    const derivedCategories = buildDerivedCategoryMap(scoped);
+
+    return scoped
+      .filter(t => t.status === 'vencida' || !resolveEffectiveCategoryId(t, derivedCategories))
       .sort((a, b) => compareFinancialDateStrings(b.data, a.data))
       .slice(0, 3);
   }, [transactions, workspace]);
 
   // Últimas transações realizadas
   const recentTransactions = useMemo(() => {
-    return transactions
-      .filter(t => 
-        t.origem === workspace && 
-        !t.deletado && 
-        t.status === 'realizada'
-      )
+    return dedupeGeneratedRecurrences(transactions)
+      .filter(t => t.origem === workspace && !t.deletado && t.status === 'realizada')
       .sort((a, b) => compareFinancialDateStrings(b.data, a.data))
       .slice(0, 5);
   }, [transactions, workspace]);

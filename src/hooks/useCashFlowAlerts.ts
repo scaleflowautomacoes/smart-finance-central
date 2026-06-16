@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Transaction } from '@/types/financial';
 import { addDays, startOfMonth, endOfMonth } from 'date-fns';
 import { isFinancialDateWithinRange } from '@/utils/financialDate';
+import { dedupeGeneratedRecurrences } from '@/lib/financialAnalytics';
 
 export interface CashAlert {
   type: 'critical' | 'warning' | 'info';
@@ -19,7 +20,7 @@ export const useCashFlowAlerts = (
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
     
-    const workspaceTransactions = transactions.filter(t => 
+    const workspaceTransactions = dedupeGeneratedRecurrences(transactions).filter(t => 
       t.origem === workspace && 
       !t.deletado &&
       t.recorrencia_ativa !== false &&

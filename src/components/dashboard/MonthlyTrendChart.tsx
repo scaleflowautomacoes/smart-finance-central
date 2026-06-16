@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { 
+import {
   LineChart, 
   Line, 
   XAxis, 
@@ -9,7 +9,8 @@ import {
   Tooltip, 
   Legend,
   Area,
-  ComposedChart
+  ComposedChart,
+  TooltipProps,
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Transaction } from '@/types/financial';
@@ -19,6 +20,7 @@ import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'd
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { parseFinancialDate } from '@/utils/financialDate';
+import { dedupeGeneratedRecurrences } from '@/lib/financialAnalytics';
 
 interface MonthlyTrendChartProps {
   transactions: Transaction[];
@@ -44,13 +46,14 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ transactions, wor
   const monthlyData = useMemo(() => {
     const now = new Date();
     const months: MonthData[] = [];
+    const normalizedTransactions = dedupeGeneratedRecurrences(transactions);
 
     for (let i = 5; i >= 0; i--) {
       const monthDate = subMonths(now, i);
       const monthStart = startOfMonth(monthDate);
       const monthEnd = endOfMonth(monthDate);
 
-      const monthTransactions = transactions.filter(t => {
+      const monthTransactions = normalizedTransactions.filter(t => {
         if (t.origem !== workspace || t.deletado || t.recorrencia_ativa === false) {
           return false;
         }
@@ -95,12 +98,12 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ transactions, wor
     };
   }, [monthlyData]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card border border-border rounded-lg shadow-lg p-4 min-w-[200px]">
           <p className="font-semibold text-foreground mb-3 text-base">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between mb-2">
               <div className="flex items-center">
                 <div 
@@ -127,12 +130,12 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ transactions, wor
   const trendColor = trend.type === 'up' ? 'text-emerald-500' : trend.type === 'down' ? 'text-rose-500' : 'text-muted-foreground';
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card to-gray-50/50 dark:to-gray-900/50">
-      <CardHeader className="bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-gray-800 dark:to-gray-900">
+    <Card className="overflow-hidden border border-border/60 bg-surface/95 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)]">
+      <CardHeader className="border-b border-border/60 bg-gradient-to-r from-emerald-500/8 via-transparent to-sky-500/8">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg text-foreground">Evolução Financeira</CardTitle>
+          <CardTitle className="text-base font-semibold text-foreground lg:text-lg">Evolução Financeira</CardTitle>
           <div className="flex items-center gap-2">
-            <div className={`flex items-center gap-1 px-3 py-1 rounded-full border bg-background ${trendColor}`}>
+            <div className={`flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-3 py-1 ${trendColor}`}>
               <TrendIcon className="w-4 h-4" />
               <span className="text-sm font-medium">
                 {trend.value.toFixed(1)}%
@@ -142,8 +145,8 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ transactions, wor
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="h-72">
+      <CardContent className="p-5 lg:p-6">
+        <div className="h-64 lg:h-72">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <defs>
@@ -226,7 +229,7 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ transactions, wor
         </div>
         
         {/* Resumo dos últimos meses */}
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-border">
+        <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border/60 pt-4">
           <div className="text-center">
             <div className="text-xs text-muted-foreground mb-1">Total Entradas (6 meses)</div>
             <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">

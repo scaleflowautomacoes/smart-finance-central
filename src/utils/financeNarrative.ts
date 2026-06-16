@@ -1,6 +1,7 @@
 import { addDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { DashboardMetrics, Goal, Transaction } from '@/types/financial';
 import { parseFinancialDate } from '@/utils/financialDate';
+import { dedupeGeneratedRecurrences } from '@/lib/financialAnalytics';
 
 export type FinancePulseStatus = 'healthy' | 'opportunity' | 'attention' | 'critical';
 
@@ -48,8 +49,9 @@ export const buildOperationalWindowSummary = (
   const today = startOfDay(new Date());
   const window15 = addDays(today, 15);
   const window30 = addDays(today, 30);
+  const normalizedTransactions = dedupeGeneratedRecurrences(transactions);
 
-  return transactions.reduce<OperationalWindowSummary>((acc, transaction) => {
+  return normalizedTransactions.reduce<OperationalWindowSummary>((acc, transaction) => {
     if (transaction.origem !== workspace || transaction.deletado || transaction.status === 'cancelada') {
       return acc;
     }

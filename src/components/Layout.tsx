@@ -182,7 +182,7 @@ const Layout: React.FC<LayoutProps> = ({
         {/* Main Content */}
         <main className="flex-1">
           <div className="mx-auto w-full max-w-[1800px] px-4 py-4 lg:px-6 lg:py-6">
-            <div className="rounded-[calc(var(--radius)+0.5rem)] border border-border/40 bg-background/30 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.45)] backdrop-blur-sm">
+            <div className="rounded-[calc(var(--radius)+0.5rem)] border border-border/30 bg-background/20 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.32)] backdrop-blur-sm">
               {children}
             </div>
           </div>

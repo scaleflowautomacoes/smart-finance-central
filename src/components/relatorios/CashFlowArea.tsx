@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { TrendingUp } from 'lucide-react';
 import { Transaction } from '@/types/financial';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { Briefcase } from 'lucide-react';
 import { formatCurrency, CHART_COLORS } from '@/utils/chartColors';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,6 +10,9 @@ import {
   isFinancialDateWithinRange,
   parseFinancialDate,
 } from '@/utils/financialDate';
+import { dedupeGeneratedRecurrences } from '@/lib/financialAnalytics';
+import { ChartCard } from '@/components/dashboard/ChartCard';
+import { Badge } from '@/components/ui/badge';
 
 interface CashFlowAreaProps {
   transactions: Transaction[];
@@ -19,11 +21,25 @@ interface CashFlowAreaProps {
   endDate?: Date;
 }
 
+interface TooltipEntry {
+  dataKey: string;
+  name: string;
+  value: number;
+  color?: string;
+  fill?: string;
+}
+
+interface TooltipState {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
+
 const CashFlowArea: React.FC<CashFlowAreaProps> = ({ transactions, workspace, startDate, endDate }) => {
   const chartData = useMemo(() => {
-    const filteredTransactions = transactions.filter(t => {
-      if (t.origem !== workspace || t.deletado || t.status !== 'realizada') return false;
-      return isFinancialDateWithinRange(t.data, startDate, endDate);
+    const filteredTransactions = dedupeGeneratedRecurrences(transactions).filter((transaction) => {
+      if (transaction.origem !== workspace || transaction.deletado || transaction.status !== 'realizada') return false;
+      return isFinancialDateWithinRange(transaction.data, startDate, endDate);
     });
 
     if (filteredTransactions.length === 0) {
@@ -31,10 +47,10 @@ const CashFlowArea: React.FC<CashFlowAreaProps> = ({ transactions, workspace, st
     }
 
     const sortedTransactions = [...filteredTransactions].sort((a, b) =>
-      compareFinancialDateStrings(a.data, b.data)
+      compareFinancialDateStrings(a.data, b.data),
     );
 
-    const monthlyData: { [key: string]: { receitas: number; despesas: number } } = {};
+    const monthlyData: Record<string, { receitas: number; despesas: number }> = {};
 
     const rangeStart = startDate
       ? startOfMonth(startDate)
@@ -43,22 +59,22 @@ const CashFlowArea: React.FC<CashFlowAreaProps> = ({ transactions, workspace, st
       ? endOfMonth(endDate)
       : endOfMonth(parseFinancialDate(sortedTransactions[sortedTransactions.length - 1].data));
 
-    let current = rangeStart;
+    let current = new Date(rangeStart);
 
     while (current <= rangeEnd) {
       const key = format(current, 'MMM/yy', { locale: ptBR });
       monthlyData[key] = { receitas: 0, despesas: 0 };
-      current = startOfMonth(new Date(current.setMonth(current.getMonth() + 1)));
+      current = startOfMonth(new Date(current.getFullYear(), current.getMonth() + 1, 1));
     }
 
-    filteredTransactions.forEach(t => {
-      const monthKey = format(parseFinancialDate(t.data), 'MMM/yy', { locale: ptBR });
-      if (monthlyData[monthKey]) {
-        if (t.tipo === 'entrada') {
-          monthlyData[monthKey].receitas += t.valor;
-        } else {
-          monthlyData[monthKey].despesas += t.valor;
-        }
+    filteredTransactions.forEach((transaction) => {
+      const monthKey = format(parseFinancialDate(transaction.data), 'MMM/yy', { locale: ptBR });
+      if (!monthlyData[monthKey]) return;
+
+      if (transaction.tipo === 'entrada') {
+        monthlyData[monthKey].receitas += transaction.valor;
+      } else {
+        monthlyData[monthKey].despesas += transaction.valor;
       }
     });
 
@@ -66,76 +82,130 @@ const CashFlowArea: React.FC<CashFlowAreaProps> = ({ transactions, workspace, st
       month,
       Receitas: data.receitas,
       Despesas: data.despesas,
+      saldo: data.receitas - data.despesas,
     }));
   }, [transactions, workspace, startDate, endDate]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[200px]">
-          <p className="font-semibold text-gray-900 mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center justify-between mb-1">
-              <div className="flex items-center">
-                <div 
-                  className="w-3 h-3 rounded-full mr-2" 
-                  style={{ backgroundColor: entry.color || entry.fill }}
-                />
-                <span className="text-sm text-gray-600">{entry.name}:</span>
-              </div>
-              <span className="font-medium text-gray-900 ml-2">
-                {formatCurrency(entry.value)}
-              </span>
+  const totals = useMemo(() => {
+    return chartData.reduce(
+      (acc, item) => {
+        acc.receitas += item.Receitas;
+        acc.despesas += item.Despesas;
+        acc.saldo += item.saldo;
+        return acc;
+      },
+      { receitas: 0, despesas: 0, saldo: 0 },
+    );
+  }, [chartData]);
+
+  const CustomTooltip = ({ active, payload, label }: TooltipState) => {
+    if (!active || !payload?.length) return null;
+
+    return (
+      <div className="min-w-[190px] rounded-2xl border border-border/70 bg-background/95 p-3 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.28)] backdrop-blur">
+        <p className="mb-2 text-sm font-medium text-foreground">{label}</p>
+        {payload.map((entry) => (
+          <div key={entry.dataKey} className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+              {entry.name}
             </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
+            <span className="font-medium text-foreground">{formatCurrency(entry.value)}</span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center space-x-2">
-          <Briefcase className="h-5 w-5" />
-          <span>Fluxo de Caixa Realizado (Receitas vs Despesas)</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="h-80 p-6">
+    <ChartCard
+      title="Fluxo realizado do período"
+      headerRight={
+        <Badge variant="outline" className="rounded-full border-border/60 bg-surface/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+          Receitas vs despesas
+        </Badge>
+      }
+      contentClassName="space-y-5"
+      className="border-border/60 bg-background/95"
+    >
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-[1.15rem] border border-border/60 bg-surface/80 p-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Receitas</div>
+          <div className="mt-2 text-lg font-semibold text-emerald-700 dark:text-emerald-300">{formatCurrency(totals.receitas)}</div>
+        </div>
+        <div className="rounded-[1.15rem] border border-border/60 bg-surface/80 p-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Despesas</div>
+          <div className="mt-2 text-lg font-semibold text-rose-700 dark:text-rose-300">{formatCurrency(totals.despesas)}</div>
+        </div>
+        <div className="rounded-[1.15rem] border border-border/60 bg-surface/80 p-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Saldo líquido</div>
+          <div className="mt-2 text-lg font-semibold text-sky-700 dark:text-sky-300">{formatCurrency(totals.saldo)}</div>
+        </div>
+      </div>
+
+      <div className="h-[22rem]">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.neutral[200]} />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="Receitas" 
-                stackId="1" 
-                stroke={CHART_COLORS.income.main} 
-                fill={CHART_COLORS.income.light} 
-                name="Receitas"
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -12, bottom: 0 }}>
+              <defs>
+                <linearGradient id="incomeArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={CHART_COLORS.income.main} stopOpacity={0.24} />
+                  <stop offset="100%" stopColor={CHART_COLORS.income.main} stopOpacity={0.04} />
+                </linearGradient>
+                <linearGradient id="expenseArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={CHART_COLORS.expense.main} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={CHART_COLORS.expense.main} stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="4 4" stroke={CHART_COLORS.neutral[200]} vertical={false} />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: CHART_COLORS.neutral[500], fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
               />
-              <Area 
-                type="monotone" 
-                dataKey="Despesas" 
-                stackId="1" 
-                stroke={CHART_COLORS.expense.main} 
-                fill={CHART_COLORS.expense.light} 
+              <YAxis
+                tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                tick={{ fill: CHART_COLORS.neutral[500], fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                iconType="circle"
+                wrapperStyle={{ fontSize: '12px', color: CHART_COLORS.neutral[500], paddingTop: '12px' }}
+              />
+              <Area
+                type="monotone"
+                dataKey="Receitas"
+                name="Receitas"
+                stroke={CHART_COLORS.income.main}
+                strokeWidth={2}
+                fill="url(#incomeArea)"
+                fillOpacity={1}
+              />
+              <Area
+                type="monotone"
+                dataKey="Despesas"
                 name="Despesas"
+                stroke={CHART_COLORS.expense.main}
+                strokeWidth={2}
+                fill="url(#expenseArea)"
+                fillOpacity={1}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-500">
-            Nenhuma transação realizada no período para análise de fluxo.
+          <div className="flex h-full flex-col items-center justify-center rounded-[1.35rem] border border-dashed border-border/70 bg-surface/70 px-6 text-center">
+            <TrendingUp className="mb-3 h-8 w-8 text-muted-foreground/60" />
+            <div className="text-sm font-medium text-foreground">Sem fluxo realizado no período.</div>
+            <div className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">
+              Quando houver receitas e despesas concluídas dentro do recorte, o gráfico mensal aparece aqui.
+            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ChartCard>
   );
 };
 

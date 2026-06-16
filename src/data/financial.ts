@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Category } from '@/types/financial';
 import { formatFinancialDate } from '@/utils/financialDate';
+import { buildCanonicalMerchantKey } from '@/lib/financialAnalytics';
 
 // --- Converters ---
 
@@ -106,6 +107,57 @@ export async function updateTransaction(id: string, updates: Partial<Transaction
     .eq('id', id);
 
   if (error) throw error;
+
+  const shouldPropagateCategory = Object.prototype.hasOwnProperty.call(updates, 'categoria_id');
+  if (!shouldPropagateCategory || updates.categoria_id === undefined) {
+    return;
+  }
+
+  const { data: targetTransaction, error: targetError } = await supabase
+    .from('transactions')
+    .select('id,nome,observacoes,tipo,valor,data,origem,recorrencia_transacao_pai_id,is_recorrente,recorrencia_tipo,recorrencia_total_ocorrencias,categoria_id,subcategoria_id')
+    .eq('id', id)
+    .single();
+
+  if (targetError || !targetTransaction) {
+    if (targetError) throw targetError;
+    return;
+  }
+
+  const canonicalKey = buildCanonicalMerchantKey({
+    ...targetTransaction,
+  } as any);
+
+  const { data: workspaceTransactions, error: workspaceError } = await supabase
+    .from('transactions')
+    .select('id,nome,observacoes,tipo,valor,data,origem,recorrencia_transacao_pai_id,is_recorrente,recorrencia_tipo,recorrencia_total_ocorrencias,categoria_id,subcategoria_id,deletado')
+    .eq('origem', targetTransaction.origem)
+    .eq('deletado', false);
+
+  if (workspaceError) throw workspaceError;
+
+  const equivalentIds = (workspaceTransactions || [])
+    .filter((transaction) => {
+      if (transaction.id === id) return false;
+      if (transaction.tipo !== targetTransaction.tipo) return false;
+      const candidateKey = buildCanonicalMerchantKey(transaction as any);
+      return candidateKey === canonicalKey;
+    })
+    .map((transaction) => transaction.id);
+
+  if (equivalentIds.length === 0) return;
+
+  const propagateData: Record<string, unknown> = { categoria_id: updates.categoria_id };
+  if (Object.prototype.hasOwnProperty.call(updates, 'subcategoria_id')) {
+    propagateData.subcategoria_id = updates.subcategoria_id ?? null;
+  }
+
+  const { error: propagateError } = await supabase
+    .from('transactions')
+    .update(propagateData as never)
+    .in('id', equivalentIds);
+
+  if (propagateError) throw propagateError;
 }
 
 export async function softDeleteTransaction(id: string): Promise<void> {

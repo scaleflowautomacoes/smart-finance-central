@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import { Transaction, Category } from '@/types/financial';
-import { isFinancialDateWithinRange } from '@/utils/financialDate';
+import {
+  buildDerivedCategoryMap,
+  dedupeGeneratedRecurrences,
+  filterTransactionsForPeriod,
+  resolveEffectiveCategoryId,
+} from '@/lib/financialAnalytics';
 
 export interface DREMetrics {
   receitaBruta: number;
@@ -22,11 +27,11 @@ export interface DREMetrics {
 // Mapeamento simplificado de categorias para DRE (assumindo que categorias são marcadas ou inferidas)
 // Para esta implementação, vamos usar um mapeamento baseado em nomes/tipos para simular a estrutura DRE.
 const DRE_CATEGORY_MAP = {
-  DEDUCOES_IMPOSTOS: ['Impostos', 'Taxas'],
-  CUSTOS_VARIAVEIS: ['Fornecedores', 'Marketing', 'Chips', 'Disparos'],
-  CUSTOS_FIXOS: ['Aluguel Escritório', 'Pro-labore', 'Internet'],
-  DESPESAS_FINANCEIRAS: ['Juros', 'Taxas Bancárias'],
-  RECEITAS_FINANCEIRAS: ['Rendimentos', 'Juros Recebidos'],
+  DEDUCOES_IMPOSTOS: ['Impostos', 'Taxas', 'DAS', 'Simples Nacional'],
+  CUSTOS_VARIAVEIS: ['Fornecedores', 'Marketing', 'Chips', 'Disparos', 'Alimentação', 'Mercado/Condomínio', 'Transporte'],
+  CUSTOS_FIXOS: ['Aluguel', 'Aluguel Escritório', 'Pro-labore', 'Internet', 'Estrutura', 'Estacionamento', 'Combustível'],
+  DESPESAS_FINANCEIRAS: ['Juros', 'Taxas Bancárias', 'Tarifas'],
+  RECEITAS_FINANCEIRAS: ['Rendimentos', 'Juros Recebidos', 'Recebimentos'],
 };
 
 const getCategoryName = (categoryId: string | undefined, categories: Category[]): string => {
@@ -40,17 +45,10 @@ const calculateDRE = (
   startDate?: Date,
   endDate?: Date
 ): DREMetrics => {
-  let filteredTransactions = transactions.filter(t => 
-    t.origem === workspace && 
-    !t.deletado &&
-    t.status === 'realizada' // DRE foca em valores realizados
-  );
-
-  if (startDate && endDate) {
-    filteredTransactions = filteredTransactions.filter(t =>
-      isFinancialDateWithinRange(t.data, startDate, endDate)
-    );
-  }
+  const filteredTransactions = dedupeGeneratedRecurrences(
+    filterTransactionsForPeriod(transactions, workspace, startDate, endDate)
+  ).filter((transaction) => transaction.status === 'realizada');
+  const derivedCategories = buildDerivedCategoryMap(filteredTransactions);
 
   let receitaBruta = 0;
   let deducoesImpostos = 0;
@@ -60,7 +58,7 @@ const calculateDRE = (
   let receitasFinanceiras = 0;
 
   filteredTransactions.forEach(t => {
-    const categoryName = getCategoryName(t.categoria_id, categories);
+    const categoryName = getCategoryName(resolveEffectiveCategoryId(t, derivedCategories) || undefined, categories);
     
     if (t.tipo === 'entrada') {
       receitaBruta += t.valor;

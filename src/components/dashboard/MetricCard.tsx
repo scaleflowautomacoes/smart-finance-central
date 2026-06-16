@@ -14,28 +14,28 @@ interface MetricCardProps {
 
 const variantStyles = {
   income: {
-    borderColor: 'border-l-4 border-l-success',
-    valueColor: 'text-success dark:text-green-400',
+    borderColor: 'border-emerald-500/20',
+    valueColor: 'text-emerald-700 dark:text-emerald-300',
     icon: TrendingUp,
-    background: 'from-success/10 via-success/5 to-transparent',
+    background: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
   },
   expense: {
-    borderColor: 'border-l-4 border-l-error',
-    valueColor: 'text-error dark:text-red-400',
+    borderColor: 'border-rose-500/20',
+    valueColor: 'text-rose-700 dark:text-rose-300',
     icon: TrendingDown,
-    background: 'from-error/10 via-error/5 to-transparent',
+    background: 'from-rose-500/10 via-rose-500/5 to-transparent',
   },
   balance: {
-    borderColor: 'border-l-4 border-l-primary',
-    valueColor: 'text-primary dark:text-blue-400',
+    borderColor: 'border-sky-500/20',
+    valueColor: 'text-sky-700 dark:text-sky-300',
     icon: Minus,
-    background: 'from-primary/10 via-primary/5 to-transparent',
+    background: 'from-sky-500/10 via-sky-500/5 to-transparent',
   },
   warning: {
-    borderColor: 'border-l-4 border-l-warning',
-    valueColor: 'text-warning dark:text-yellow-400',
+    borderColor: 'border-amber-500/20',
+    valueColor: 'text-amber-700 dark:text-amber-300',
     icon: Minus,
-    background: 'from-warning/10 via-warning/5 to-transparent',
+    background: 'from-amber-500/10 via-amber-500/5 to-transparent',
   },
 };
 
@@ -62,17 +62,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const Icon = styles.icon;
 
   return (
-    <Card variant="soft" className={cn('relative overflow-hidden', styles.borderColor, className)}>
+    <Card variant="soft" className={cn('relative min-h-[8.5rem] overflow-hidden border border-border/60 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.3)]', styles.borderColor, className)}>
       <div className={cn('absolute inset-x-0 top-0 h-1 bg-gradient-to-r', styles.background)} />
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+      <CardHeader className="pb-2.5 pt-5">
+        <CardTitle className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className={cn('text-2xl font-bold', styles.valueColor)}>
+      <CardContent className="space-y-1.5">
+        <div className={cn('text-2xl font-semibold leading-tight tracking-tight lg:text-[1.75rem]', styles.valueColor)}>
           {formatCurrency(value)}
-          {suffix && <span className="text-sm font-normal ml-1">{suffix}</span>}
+          {suffix && <span className="ml-1 text-sm font-normal leading-5">{suffix}</span>}
         </div>
         {variation !== undefined && (
           <div className="flex items-center gap-1 mt-1">

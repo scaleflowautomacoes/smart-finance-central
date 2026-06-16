@@ -24,22 +24,22 @@ interface FocusCardProps {
 
 const priorityConfig = {
   high: {
-    containerClass: 'border-error/20 bg-gradient-to-br from-error/10 via-error/5 to-transparent',
-    badgeClass: 'border-error/20 bg-error/10 text-error',
+    containerClass: 'border-rose-500/15 bg-gradient-to-br from-rose-500/8 via-rose-500/4 to-transparent',
+    badgeClass: 'border-rose-500/15 bg-rose-500/10 text-rose-700 dark:text-rose-300',
     icon: AlertCircle,
-    iconClass: 'text-error',
+    iconClass: 'text-rose-500',
   },
   medium: {
-    containerClass: 'border-warning/20 bg-gradient-to-br from-warning/10 via-warning/5 to-transparent',
-    badgeClass: 'border-warning/20 bg-warning/10 text-warning',
+    containerClass: 'border-amber-500/15 bg-gradient-to-br from-amber-500/8 via-amber-500/4 to-transparent',
+    badgeClass: 'border-amber-500/15 bg-amber-500/10 text-amber-700 dark:text-amber-300',
     icon: Clock,
-    iconClass: 'text-warning',
+    iconClass: 'text-amber-500',
   },
   low: {
-    containerClass: 'border-success/20 bg-gradient-to-br from-success/10 via-success/5 to-transparent',
-    badgeClass: 'border-success/20 bg-success/10 text-success',
+    containerClass: 'border-emerald-500/15 bg-gradient-to-br from-emerald-500/8 via-emerald-500/4 to-transparent',
+    badgeClass: 'border-emerald-500/15 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
     icon: TrendingUp,
-    iconClass: 'text-success',
+    iconClass: 'text-emerald-500',
   },
 };
 
@@ -61,17 +61,17 @@ export const FocusCard: React.FC<FocusCardProps> = ({
 
   return (
     <Card variant="soft" className={cn(
-      'shadow-sm',
+      'shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)]',
       config.containerClass,
       className
     )}>
       <CardContent className="p-4 lg:p-5">
         <div className="flex items-start gap-3">
           <div className={cn(
-            'rounded-2xl border border-border/60 bg-background/80 p-2.5 shadow-sm',
+            'rounded-2xl border border-border/60 bg-background/80 p-2 shadow-sm',
             config.iconClass
           )}>
-            <Icon className="h-5 w-5" />
+            <Icon className="h-4.5 w-4.5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -82,7 +82,7 @@ export const FocusCard: React.FC<FocusCardProps> = ({
             <h3 className="font-semibold text-foreground">
               {title}
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm leading-6 text-muted-foreground mt-1">
               {description}
             </p>
           </div>

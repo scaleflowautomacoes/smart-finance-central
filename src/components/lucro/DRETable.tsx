@@ -1,114 +1,113 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Briefcase } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { DREMetrics } from '@/hooks/useProfitLoss';
+import { cn } from '@/lib/utils';
 
 interface DRETableProps {
   metrics: DREMetrics;
 }
 
-const formatCurrency = (value: number) => 
+const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 const DRETable: React.FC<DRETableProps> = ({ metrics }) => {
-  const getRowClass = (value: number, isResult: boolean = false) => {
-    if (isResult) {
-      return value >= 0 ? 'font-bold text-lg text-green-700' : 'font-bold text-lg text-red-700';
+  const rows = [
+    { label: 'Receita bruta', value: metrics.receitaBruta, tone: 'positive', section: true },
+    { label: '(-) Deduções e impostos', value: metrics.deducoesImpostos, tone: 'negative', indent: true },
+    { label: 'Receita líquida', value: metrics.receitaLiquida, tone: 'balance', section: true, emphasis: true },
+    { label: '(-) Custos variáveis', value: metrics.custosVariaveis, tone: 'negative', indent: true },
+    { label: 'Margem de contribuição', value: metrics.margemContribuicao, tone: 'warning', section: true },
+    { label: '(-) Custos fixos', value: metrics.custosFixos, tone: 'negative', indent: true },
+    { label: 'EBITDA', value: metrics.ebitda, tone: 'balance', section: true, emphasis: true },
+    { label: '(-) Despesas financeiras', value: metrics.despesasFinanceiras, tone: 'negative', indent: true },
+    { label: '(+) Receitas financeiras', value: metrics.receitasFinanceiras, tone: 'positive', indent: true },
+    { label: 'Lucro líquido', value: metrics.lucroLiquido, tone: metrics.lucroLiquido >= 0 ? 'positive' : 'negative', final: true },
+  ] as const;
+
+  const valueClass = (tone: string) => {
+    switch (tone) {
+      case 'positive':
+        return 'text-emerald-700 dark:text-emerald-300';
+      case 'negative':
+        return 'text-rose-700 dark:text-rose-300';
+      case 'warning':
+        return 'text-amber-700 dark:text-amber-300';
+      case 'balance':
+        return 'text-sky-700 dark:text-sky-300';
+      default:
+        return 'text-foreground';
     }
-    return value >= 0 ? 'text-gray-800' : 'text-red-600';
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center space-x-2">
-          <Briefcase className="h-5 w-5" />
-          <span>Demonstrativo de Resultado (DRE)</span>
+    <Card
+      variant="soft"
+      className="overflow-hidden border-border/60 bg-background/95 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.22)]"
+    >
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+          <Briefcase className="h-4 w-4 text-primary" />
+          Demonstrativo de Resultado
         </CardTitle>
+        <CardDescription className="text-sm">
+          Leitura estruturada da formação do resultado, da receita bruta ao lucro líquido.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table>
-          <TableBody>
-            {/* Receita Bruta */}
-            <TableRow className="bg-gray-50">
-              <TableCell className="font-bold text-base">RECEITA BRUTA</TableCell>
-              <TableCell className="text-right font-bold text-base text-green-700">
-                {formatCurrency(metrics.receitaBruta)}
-              </TableCell>
-            </TableRow>
-            
-            {/* Deduções e Impostos */}
-            <TableRow>
-              <TableCell className="pl-6 text-sm text-muted-foreground">(-) Deduções e Impostos</TableCell>
-              <TableCell className="text-right text-red-600">
-                {formatCurrency(metrics.deducoesImpostos)}
-              </TableCell>
-            </TableRow>
-            
-            {/* Receita Líquida */}
-            <TableRow className="border-y-2 border-gray-200">
-              <TableCell className="font-bold">RECEITA LÍQUIDA</TableCell>
-              <TableCell className="text-right font-bold text-blue-700">
-                {formatCurrency(metrics.receitaLiquida)}
-              </TableCell>
-            </TableRow>
-            
-            {/* Custos Variáveis */}
-            <TableRow>
-              <TableCell className="pl-6 text-sm text-muted-foreground">(-) Custos Variáveis</TableCell>
-              <TableCell className="text-right text-red-600">
-                {formatCurrency(metrics.custosVariaveis)}
-              </TableCell>
-            </TableRow>
-            
-            {/* Margem de Contribuição */}
-            <TableRow className="bg-yellow-50/50">
-              <TableCell className="font-bold">MARGEM DE CONTRIBUIÇÃO</TableCell>
-              <TableCell className={`text-right font-bold ${getRowClass(metrics.margemContribuicao)}`}>
-                {formatCurrency(metrics.margemContribuicao)}
-              </TableCell>
-            </TableRow>
-            
-            {/* Custos Fixos */}
-            <TableRow>
-              <TableCell className="pl-6 text-sm text-muted-foreground">(-) Custos Fixos</TableCell>
-              <TableCell className="text-right text-red-600">
-                {formatCurrency(metrics.custosFixos)}
-              </TableCell>
-            </TableRow>
-            
-            {/* EBITDA */}
-            <TableRow className="border-y-2 border-gray-200 bg-gray-50">
-              <TableCell className="font-bold">EBITDA</TableCell>
-              <TableCell className={`text-right font-bold ${getRowClass(metrics.ebitda)}`}>
-                {formatCurrency(metrics.ebitda)}
-              </TableCell>
-            </TableRow>
-            
-            {/* Despesas/Receitas Financeiras */}
-            <TableRow>
-              <TableCell className="pl-6 text-sm text-muted-foreground">(-) Despesas Financeiras</TableCell>
-              <TableCell className="text-right text-red-600">
-                {formatCurrency(metrics.despesasFinanceiras)}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="pl-6 text-sm text-muted-foreground">(+) Receitas Financeiras</TableCell>
-              <TableCell className="text-right text-green-600">
-                {formatCurrency(metrics.receitasFinanceiras)}
-              </TableCell>
-            </TableRow>
-            
-            {/* LUCRO LÍQUIDO */}
-            <TableRow className="bg-green-50/50 border-t-4 border-green-300">
-              <TableCell className="font-extrabold text-xl">LUCRO LÍQUIDO</TableCell>
-              <TableCell className={`text-right ${getRowClass(metrics.lucroLiquido, true)}`}>
-                {formatCurrency(metrics.lucroLiquido)}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-[1.15rem] border border-border/60 bg-surface/80 p-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Receita líquida</div>
+            <div className="mt-2 text-lg font-semibold text-sky-700 dark:text-sky-300">{formatCurrency(metrics.receitaLiquida)}</div>
+          </div>
+          <div className="rounded-[1.15rem] border border-border/60 bg-surface/80 p-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Margem de contribuição</div>
+            <div className="mt-2 text-lg font-semibold text-amber-700 dark:text-amber-300">{formatCurrency(metrics.margemContribuicao)}</div>
+          </div>
+          <div className="rounded-[1.15rem] border border-border/60 bg-surface/80 p-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Lucro líquido</div>
+            <div className={cn('mt-2 text-lg font-semibold', metrics.lucroLiquido >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300')}>
+              {formatCurrency(metrics.lucroLiquido)}
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto rounded-[1.25rem] border border-border/60 bg-background/90">
+          <Table>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow
+                  key={row.label}
+                  className={cn(
+                    'border-border/60',
+                    row.final && 'bg-emerald-500/5 hover:bg-emerald-500/10',
+                    row.emphasis && 'bg-sky-500/4',
+                    row.section && !row.final && !row.emphasis && 'bg-surface/55',
+                  )}
+                >
+                  <TableCell className={cn(
+                    'py-4 text-sm font-medium text-foreground',
+                    row.indent && 'pl-8 font-normal text-muted-foreground',
+                    row.section && 'font-semibold',
+                    row.final && 'text-base font-semibold',
+                  )}>
+                    {row.label}
+                  </TableCell>
+                  <TableCell className={cn(
+                    'py-4 text-right text-sm font-medium',
+                    valueClass(row.tone),
+                    row.section && 'font-semibold',
+                    row.final && 'text-base font-semibold',
+                  )}>
+                    {formatCurrency(row.value)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

@@ -12,24 +12,25 @@ import CategoryBreakdown from '@/components/relatorios/CategoryBreakdown';
 import CashFlowArea from '@/components/relatorios/CashFlowArea';
 import FinancialIndicators from '@/components/relatorios/FinancialIndicators';
 import ExecutiveReportStrip from '@/components/relatorios/ExecutiveReportStrip';
+import FinancialPeriodInsightsCard from '@/components/dashboard/FinancialPeriodInsightsCard';
 
 const Relatorios = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState<'PF' | 'PJ'>('PF');
-  
+
   const [dateRange, setDateRange] = useState<DateRangeState>({
     presetName: 'este-mes',
     startDate: startOfMonth(new Date()),
-    endDate: endOfMonth(new Date())
+    endDate: endOfMonth(new Date()),
   });
 
   const { transactions, categories, loading } = useSupabaseFinancialData();
   const { goals, loading: goalsLoading } = useGoals();
-  
+
   const { metrics, loading: metricsLoading } = useReportMetrics(
-    transactions, 
-    currentWorkspace, 
-    dateRange.startDate, 
-    dateRange.endDate
+    transactions,
+    currentWorkspace,
+    dateRange.startDate,
+    dateRange.endDate,
   );
 
   const handleRangeChange = (start: Date | undefined, end: Date | undefined, presetName: PresetName) => {
@@ -40,7 +41,7 @@ const Relatorios = () => {
     setDateRange({
       startDate: undefined,
       endDate: undefined,
-      presetName: 'tudo'
+      presetName: 'tudo',
     });
   };
 
@@ -77,11 +78,11 @@ const Relatorios = () => {
               <Layers3 className="h-4 w-4" />
               BI financeiro
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground lg:text-[2rem]">
               Relatórios Financeiros
             </h1>
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              Consolidação visual dos principais sinais do período, com comparativo temporal e leitura por categoria.
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Comparativo temporal, composição por categoria e contexto histórico do período na mesma linguagem editorial da home.
             </p>
           </div>
 
@@ -97,21 +98,26 @@ const Relatorios = () => {
           </div>
         </div>
 
-        {/* 1. Comparativo Temporal */}
         <ComparativeMetrics metrics={metrics} />
 
-        {/* 2. Indicadores Financeiros */}
-        <FinancialIndicators metrics={metrics.current} />
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <CashFlowArea
+            transactions={transactions}
+            workspace={currentWorkspace}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+          <FinancialIndicators metrics={metrics.current} />
+        </div>
 
-        {/* 3. Fluxo de Caixa Visualizado (Gráfico de Área) */}
-        <CashFlowArea 
-          transactions={transactions} 
-          workspace={currentWorkspace} 
+        <FinancialPeriodInsightsCard
+          transactions={transactions}
+          categories={categories}
+          workspace={currentWorkspace}
           startDate={dateRange.startDate}
           endDate={dateRange.endDate}
         />
 
-        {/* 4. Categorização Detalhada */}
         <CategoryBreakdown
           transactions={transactions}
           categories={categories}

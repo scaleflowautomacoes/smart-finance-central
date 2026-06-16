@@ -1,6 +1,10 @@
 import { Transaction } from '@/types/financial';
 import { differenceInDays, subDays } from 'date-fns';
-import { isFinancialDateWithinRange } from '@/utils/financialDate';
+import {
+  buildDerivedCategoryMap,
+  dedupeGeneratedRecurrences,
+  filterTransactionsForPeriod,
+} from '@/lib/financialAnalytics';
 
 export interface FinancialMetricBreakdown {
   entradasRealizadas: number;
@@ -56,12 +60,13 @@ const getHealthScore = (ratio: number): FinancialMetricsCore['healthScore'] => {
 
 const collectByCategory = (
   transactions: Transaction[],
-  tipo: 'entrada' | 'saida'
+  tipo: 'entrada' | 'saida',
+  effectiveCategoryIdByTransactionId?: Map<string, string>,
 ) => {
   return transactions
     .filter((transaction) => transaction.tipo === tipo)
     .reduce((acc, transaction) => {
-      const categoria = transaction.categoria_id || 'Sem categoria';
+      const categoria = effectiveCategoryIdByTransactionId?.get(transaction.id) || transaction.categoria_id || 'Sem categoria';
       const existing = acc.find((item) => item.categoria === categoria);
 
       if (existing) {
@@ -81,21 +86,8 @@ const filterFinancialTransactions = (
   startDate?: Date,
   endDate?: Date
 ) => {
-  let filtered = transactions.filter((transaction) => {
-    if (transaction.origem !== workspace) return false;
-    if (transaction.deletado) return false;
-    if (transaction.status === 'cancelada') return false;
-    if (transaction.recorrencia_ativa === false) return false;
-    return true;
-  });
-
-  if (startDate && endDate) {
-    filtered = filtered.filter((transaction) =>
-      isFinancialDateWithinRange(transaction.data, startDate, endDate)
-    );
-  }
-
-  return filtered;
+  const filtered = filterTransactionsForPeriod(transactions, workspace, startDate, endDate);
+  return dedupeGeneratedRecurrences(filtered);
 };
 
 const buildMetrics = (
@@ -106,6 +98,7 @@ const buildMetrics = (
   includeVencidas = true
 ): FinancialMetricBreakdown => {
   const filtered = filterFinancialTransactions(transactions, workspace, startDate, endDate);
+  const derivedCategories = buildDerivedCategoryMap(filtered);
   const entradas = filtered.filter((transaction) => transaction.tipo === 'entrada');
   const saidas = filtered.filter((transaction) => transaction.tipo === 'saida');
 
@@ -157,8 +150,8 @@ const buildMetrics = (
     totalSaidas,
     saldoReal,
     saldoProjetado,
-    entradasPorCategoria: collectByCategory(entradas, 'entrada'),
-    saidasPorCategoria: collectByCategory(saidas, 'saida'),
+    entradasPorCategoria: collectByCategory(entradas, 'entrada', derivedCategories.effectiveCategoryIdByTransactionId),
+    saidasPorCategoria: collectByCategory(saidas, 'saida', derivedCategories.effectiveCategoryIdByTransactionId),
   };
 };
 

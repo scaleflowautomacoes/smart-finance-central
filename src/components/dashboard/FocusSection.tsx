@@ -2,6 +2,7 @@ import React from 'react';
 import { FocusCard } from './FocusCard';
 import { useCentralMetrics } from '@/hooks/useCentralMetrics';
 import { Transaction } from '@/types/financial';
+import { buildDerivedCategoryMap, dedupeGeneratedRecurrences, resolveEffectiveCategoryId } from '@/lib/financialAnalytics';
 
 interface FocusSectionProps {
   transactions: Transaction[];
@@ -31,6 +32,10 @@ export const FocusSection: React.FC<FocusSectionProps> = ({
 
   const generateFocuses = (): FocusItem[] => {
     const focuses: FocusItem[] = [];
+    const scopedTransactions = dedupeGeneratedRecurrences(transactions).filter(
+      (transaction) => transaction.origem === workspace && !transaction.deletado,
+    );
+    const derivedCategories = buildDerivedCategoryMap(scopedTransactions);
 
     // Verificar entradas vencidas
     if (metrics.entradasVencidas > 0) {
@@ -69,8 +74,8 @@ export const FocusSection: React.FC<FocusSectionProps> = ({
     }
 
     // Verificar transações sem categoria
-    const transactionsWithoutCategory = transactions.filter(
-      t => !t.categoria_id && !t.deletado && t.origem === workspace
+    const transactionsWithoutCategory = scopedTransactions.filter(
+      t => !resolveEffectiveCategoryId(t, derivedCategories)
     );
     if (transactionsWithoutCategory.length > 0) {
       focuses.push({

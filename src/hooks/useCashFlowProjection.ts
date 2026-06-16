@@ -4,6 +4,7 @@ import { format, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { isFinancialDateWithinRange, parseFinancialDate } from '@/utils/financialDate';
 import { isProjectedTransaction } from '@/utils/transactionStatus';
+import { dedupeGeneratedRecurrences } from '@/lib/financialAnalytics';
 
 export interface MonthlyProjection {
   monthLabel: string;
@@ -30,10 +31,11 @@ const calculateProjection = (
     !t.deletado &&
     t.recorrencia_ativa !== false
   );
+  const normalizedTransactions = dedupeGeneratedRecurrences(activeTransactions);
 
   // 2. Calcular o saldo real até o final do mês atual (para iniciar a projeção)
   const currentMonthEnd = endOfMonth(now);
-  const currentMonthTransactions = activeTransactions.filter(t => 
+  const currentMonthTransactions = normalizedTransactions.filter(t => 
     parseFinancialDate(t.data) <= currentMonthEnd
   );
 
@@ -55,7 +57,7 @@ const calculateProjection = (
     const monthLabel = format(monthDate, 'MMM/yyyy', { locale: ptBR });
 
     // Filtrar transações previstas/recorrentes para este mês
-    const monthTransactions = activeTransactions.filter(t => {
+    const monthTransactions = normalizedTransactions.filter(t => {
       return isFinancialDateWithinRange(t.data, monthStart, monthEnd);
     });
 
